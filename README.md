@@ -1,1 +1,1 @@
-This repo will keep the new SDK firmware
+This file will contain the project history giving credits to all who have put a lot of effort for implementing dip sir architecture on small mcus and made this project happen (Guido, Arjante, Klaus, etc.)
