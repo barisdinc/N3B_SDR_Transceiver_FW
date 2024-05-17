@@ -5,13 +5,10 @@
  * Author: Baris Dinc TA7W / OH2UDS
  */ 
 
-// #include "uSDR.h"
-// #include "dsp.h"
+#include "Arduino.h"
+#include "uSDR.h"
+#include "dsp.h"
 #include "adf4360.h"
-#include <stdint.h>
-#include <stdio.h>
-#include <time.h>
-#include "pico/stdlib.h"
 
 vfo_t vfo[1];				// 0: RX vfo     1: TX vfo
 
@@ -20,23 +17,8 @@ int si_getreg(uint8_t *data, uint8_t reg, uint8_t len)
   //not applicable for ADF4360
 	return(len);
 }
-#define MSBFIRST 1
-#define LSBFIRST 0
 
-void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val)
-{
-      uint8_t i;
 
-      for (i = 0; i < 8; i++)  {
-            if (bitOrder == LSBFIRST)
-                  gpio_put(dataPin, !!(val & (1 << i)));
-            else      
-                  gpio_put(dataPin, !!(val & (1 << (7 - i))));
-                  
-            gpio_put(clockPin, 1);
-            gpio_put(clockPin, 0);            
-      }
-}
 
 /*
 * Calculate required register values and push them out
@@ -47,9 +29,9 @@ void adf4360_evaluate(void)
 	if (vfo[0].flag)
 	{
     // prepare R register to be sent out first
-    printf(" F: %ld\n",vfo[0].freq);
+    Serial.print(" F:"); Serial.print(vfo[0].freq,DEC) ;
     unsigned long R_reg = 0x000000;
-    uint8_t control_bits = 0b01 ; //R_reg
+    uint8_t control_bits = B01 ; //R_reg
     unsigned long r_counter = R_COUNTER ;
     if (r_counter < 1) r_counter = 1 ;
     if (r_counter > 16383) r_counter = 16383 ;
@@ -58,19 +40,20 @@ void adf4360_evaluate(void)
     R_reg = R_reg | (vfo[0].abpw << 16);
     R_reg = R_reg | (r_counter << 2);
     R_reg = R_reg | control_bits ; 
-    printf(" R: %lX\n", R_reg) ;
+    Serial.print(" R:"); Serial.print(R_reg,HEX) ;
 
     // send our R register
-    gpio_put(ADF_LE, 0);
+    digitalWrite(ADF_LE, LOW);
     shiftOut(ADF_DAT, ADF_CLK, MSBFIRST, (R_reg >> 16) );
     shiftOut(ADF_DAT, ADF_CLK, MSBFIRST, (R_reg >> 8) );
     shiftOut(ADF_DAT, ADF_CLK, MSBFIRST, (R_reg) );  
-    gpio_put(ADF_LE, 1); sleep_ms(1); gpio_put(ADF_LE, 0); // latch data into registers
-
+    digitalWrite(ADF_LE, HIGH); delay(1);
+    digitalWrite(ADF_LE, LOW);
+    //delay(100);
 
     // prepare Control register to be sent out first
     unsigned long C_reg = 0x000000;
-    control_bits = 0b00 ;
+    control_bits = B00 ;
     C_reg = (vfo[0].ps << 22);
     C_reg = C_reg | (vfo[0].pd << 20);
     C_reg = C_reg | (vfo[0].cp2s << 17);
@@ -83,18 +66,19 @@ void adf4360_evaluate(void)
     C_reg = C_reg | (vfo[0].mux << 5 );
     C_reg = C_reg | (vfo[0].cpl << 2 );
     C_reg = C_reg | control_bits ;
-    printf(" C: %lX\n", C_reg);
+    Serial.print(" C:"); Serial.print(C_reg,HEX) ;
 
     // send our Control register
-    gpio_put(ADF_LE, 0);
+    digitalWrite(ADF_LE, LOW);
     shiftOut(ADF_DAT, ADF_CLK, MSBFIRST, (C_reg >> 16) );
     shiftOut(ADF_DAT, ADF_CLK, MSBFIRST, (C_reg >> 8) );
     shiftOut(ADF_DAT, ADF_CLK, MSBFIRST, (C_reg) );  
-    gpio_put(ADF_LE, 1); sleep_ms(1); gpio_put(ADF_LE, 0); // latch data into registers
+    digitalWrite(ADF_LE, HIGH); delay(1);
+    digitalWrite(ADF_LE, LOW);
     //delay(100);
 
     // prepare N register to be sent out first
-    control_bits = 0b10 ;
+    control_bits = B10 ;
     unsigned long N_reg = 0x000000;
     unsigned int steps = vfo[0].freq / PFD;
     unsigned long b_counter =  steps / (8 * (1 << vfo[0].ps)); // 00 -> 8  01 -> 16 10 -> 32
@@ -109,14 +93,15 @@ void adf4360_evaluate(void)
     N_reg = N_reg | (b_counter << 8);
     N_reg = N_reg | (a_counter << 2);
     N_reg = N_reg | control_bits ;
-    printf(" N: %lX\n",N_reg);
+    Serial.print(" N:"); Serial.println(N_reg,HEX);
 
     // send our Control register
-    gpio_put(ADF_LE, 1);
+    digitalWrite(ADF_LE, LOW);
     shiftOut(ADF_DAT, ADF_CLK, MSBFIRST, (N_reg >> 16) );
     shiftOut(ADF_DAT, ADF_CLK, MSBFIRST, (N_reg >> 8) );
     shiftOut(ADF_DAT, ADF_CLK, MSBFIRST, (N_reg) );  
-    gpio_put(ADF_LE, 1); sleep_ms(1); gpio_put(ADF_LE, 0); // latch data into registers
+    digitalWrite(ADF_LE, HIGH); delay(1);
+    digitalWrite(ADF_LE, LOW);
     //delay(100);
 
     // set vco updated flag
@@ -128,6 +113,9 @@ void adf4360_evaluate(void)
 // Initialize the ADF4360 VFO registers
 void adf4360_init(void)
 {
+
+	uint8_t data[16];
+
 	// Hard initialize Synth registers: RX 739.750 MHz TX:2400.250 MHz
 	// R=0x340051
 	// N=0x00B83E
@@ -157,22 +145,14 @@ void adf4360_init(void)
   vfo[0].a    = 15;    // 5 bit A counter
 
   //Initialize the SPI hardware
-  //Output pins
-	gpio_init(ADF_LE);
-	gpio_init(ADF_CLK);
-	gpio_init(ADF_DAT);
-	gpio_set_dir(ADF_LE, GPIO_OUT);
-	gpio_set_dir(ADF_CLK, GPIO_OUT);
-	gpio_set_dir(ADF_DAT, GPIO_OUT);
-	gpio_put(ADF_LE, 0);	
-	gpio_put(ADF_CLK, 0);	
-	gpio_put(ADF_DAT, 0);	
+  gpio_set_dir(ADF_LE, GPIO_OUT); 
+  gpio_set_dir(ADF_CLK, GPIO_OUT); 
+  gpio_set_dir(ADF_DAT, GPIO_OUT); 
+  gpio_set_dir(ADF_MUX, GPIO_IN); 
+  digitalWrite(ADF_LE, LOW);
+  digitalWrite(ADF_CLK, LOW);
+  digitalWrite(ADF_DAT, LOW);
 
-  // //input pins
-  // gpio_init(ADF_MUX);
-  // //gpio_pull_up(ADF_MUX);           
-  // gpio_set_dir(ADF_MUX, GPIO_IN);    // MUX output from ADF4360, programmed for Digital LOCK Detect
-  
   // push the new fequency out
   //adf4360_evaluate();
 

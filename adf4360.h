@@ -1,13 +1,14 @@
 #ifndef _ADF4360_H
 #define _ADF4360_H
 
-#include <stdint.h>
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define ADF_LE  13
 #define ADF_CLK 14
 #define ADF_DAT 15
-//#define ADF_MUX 4 //We dforgot to connect MUX in RX board
+#define ADF_MUX 4
 
 
 #define CRYSTAL 10000 //10MHz 10000KHz
@@ -59,4 +60,8 @@ void adf4360_evaluate(void);
 
 
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif /* _ADF4360_H */
