@@ -8,7 +8,7 @@ extern "C" {
 #define ADF_LE  13
 #define ADF_CLK 14
 #define ADF_DAT 15
-#define ADF_MUX 4
+#define ADF_MUX 28
 
 
 #define CRYSTAL 10000 //10MHz 10000KHz

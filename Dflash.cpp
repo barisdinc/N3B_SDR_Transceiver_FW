@@ -77,7 +77,7 @@
 
 
 #include "Arduino.h"
-#include "uSDR.h"
+#include "N3B.h"
 extern "C" {
   #include <hardware/sync.h>
   #include <hardware/flash.h>
@@ -259,7 +259,7 @@ void Init_HMI_data(uint8_t *actual_bnd)
         }
         else
         {
-          *actual_bnd = 2;  //no data in DFLASH, use default band vars
+          *actual_bnd = 0;  //no data in DFLASH, use default band vars
           last_block = i-1;   //  -1 means empty DFLASH
         }
         //Serialx.println("\nRead menu configuration from DFLASH = NOT OK    Using Default Values");

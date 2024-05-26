@@ -1,13 +1,9 @@
-#ifndef __uSDR_H__
-#define __uSDR_H__
+#ifndef __N3B_H__
+#define __N3B_H__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-
-//#define PY2KLA_setup  1    //setup for PY2KLA hardware   (comment this line for default setup)
-
 
 //choose the serial to be used
 //#define Serialx   Serial1    //USB virtual serial  /dev/ttyACM0
@@ -15,10 +11,11 @@ extern "C" {
 
 #define LOOP_MS    100  //100 miliseconds
 
+#define RX_IF_FREQ  9750000
 
-void uSDR_setup0(void);
-void uSDR_setup(void);
-void uSDR_loop(void);
+void N3B_info(void);
+void N3B_setup(void);
+void N3B_loop(void);
 
 
 

@@ -37,7 +37,7 @@
 #include "pico/multicore.h"
 #include "hmi.h"
 #include "hardware/structs/bus_ctrl.h"
-#include "uSDR.h"
+#include "N3B.h"
 #include "dsp.h"
 #include "display_tft.h"
 #include "kiss_fftr.h"

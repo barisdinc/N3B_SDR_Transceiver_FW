@@ -6,7 +6,7 @@
  */ 
 
 #include "Arduino.h"
-#include "uSDR.h"
+#include "N3B.h"
 #include "dsp.h"
 #include "adf4360.h"
 
@@ -148,7 +148,7 @@ void adf4360_init(void)
   gpio_set_dir(ADF_LE, GPIO_OUT); 
   gpio_set_dir(ADF_CLK, GPIO_OUT); 
   gpio_set_dir(ADF_DAT, GPIO_OUT); 
-  gpio_set_dir(ADF_MUX, GPIO_IN); 
+  //gpio_set_dir(ADF_MUX, GPIO_IN); 
   digitalWrite(ADF_LE, LOW);
   digitalWrite(ADF_CLK, LOW);
   digitalWrite(ADF_DAT, LOW);

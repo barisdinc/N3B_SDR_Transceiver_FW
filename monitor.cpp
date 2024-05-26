@@ -37,7 +37,7 @@
 #include "hmi.h"
 #include "relay.h"
 #include "monitor.h"
-#include "uSDR.h"
+#include "N3B.h"
 
 
 #define CR			13

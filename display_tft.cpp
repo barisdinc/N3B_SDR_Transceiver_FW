@@ -9,7 +9,7 @@
 
 #include "Arduino.h"
 #include "SPI.h"
-#include "uSDR.h"  //Serialx
+#include "N3B.h"  //Serialx
 #include "dsp.h"
 #include "display_tft.h"
 #include "TFT_eSPI.h"
@@ -466,78 +466,30 @@ int16_t aud_samp_trigger;
 
 }
 
-
-
-
-
-
-
-
-
-
-/*********************************************************
-  Initial msgs on display  (after reset)
-*********************************************************/
-void display_tft_setup0(void) {
-  char s[32];
+void display_tft_info()
+{
+   char s[32];
   
   tft.init();
   tft.setRotation(ROTATION_SETUP);
- 
   tft.fillScreen(TFT_BLACK);
-
-//  sprintf(s, "uSDR Pico");
-  sprintf(s, "B3N TRX");  //name changed from uSDR Pico FFT
+  sprintf(s, "B3N TRX");
   tft_writexy_plus(3, TFT_YELLOW, TFT_BLACK, 2,10,1,0,(uint8_t *)s);
-
-  //tft.fillRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t radius, uint32_t color)
-  //tft.drawRoundRect(int32_t x, int32_t y, int32_t w, int32_t h, int32_t radius, uint32_t color)
   tft.drawRoundRect(35, 25, 250, 70, 15, TFT_YELLOW);
-
-//  sprintf(s, "uSDR Pico FFT");  //name changed from uSDR Pico FFT
-  sprintf(s, "QO-100 SSB/AM/CW");  //name changed from uSDR Pico FFT
-//  tft_writexy_plus(2, TFT_YELLOW, TFT_BLACK, 0,0,3,10,(uint8_t *)s);
+  sprintf(s, "QO-100 SSB/AM/CW");
   tft_writexy_plus(1, TFT_YELLOW, TFT_BLACK, 3,0,5,0,(uint8_t *)s);
-
   sprintf(s, "Sat Transceiver");  //name changed from uSDR Pico FFT
-//  tft_writexy_plus(2, TFT_YELLOW, TFT_BLACK, 0,10,4,10,(uint8_t *)s);
   tft_writexy_plus(1, TFT_YELLOW, TFT_BLACK, 4,0,6,10,(uint8_t *)s);
-
-
-//#ifdef PY2KLA_setup
-//  sprintf(s, "by");
-//  tft_writexy_plus(1, TFT_LIGHTGREY, TFT_BLACK, 0,0,5,0,(uint8_t *)s);
-//  sprintf(s, "PE1ATM");
-//  sprintf(s, "by");
-//  tft_writexy_plus(1, TFT_LIGHTGREY, TFT_BLACK, 0,0,7,0,(uint8_t *)s);
   sprintf(s, "TA-NET");
   tft_writexy_plus(1, TFT_SKYBLUE, TFT_BLACK, 3,0,9,0,(uint8_t *)s);
-//  sprintf(s, "and");
-//  tft_writexy_plus(1, TFT_LIGHTGREY, TFT_BLACK, 0,0,8,0,(uint8_t *)s);
-// sprintf(s, "PY2KLA");
-//  sprintf(s, "and");
-//  tft_writexy_plus(1, TFT_LIGHTGREY, TFT_BLACK, 0,0,9,0,(uint8_t *)s);
   sprintf(s, "10489.777 MHz");
   tft_writexy_plus(1, TFT_SKYBLUE, TFT_BLACK, 2,0,10,0,(uint8_t *)s);
-//#endif  
 }
 
-
-
-
-/*********************************************************
-  
-*********************************************************/
 void display_tft_setup(void) {
 
-//uint16_t x, y;
-char s[32];
-  
-//  tft.init();
-//  tft.setRotation(ROTATION_SETUP);
-
+  char s[32];
   tft.fillScreen(TFT_BLACK);
-  
 
   //tft.drawRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color)
   //tft.drawRect(X_MIN_AUD_GRAPH-1, Y_MIN_AUD_GRAPH-1, AUD_GRAPH_NUM_COLS+2, (AUD_GRAPH_MAX - AUD_GRAPH_MIN + 1)+2, TFT_WHITE);

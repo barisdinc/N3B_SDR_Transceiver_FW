@@ -41,7 +41,7 @@
 */
 
 #include "relay.h"
-#include "uSDR.h"
+#include "N3B.h"
 
 
 /* I2C address and pins */
