@@ -142,11 +142,11 @@ int arr[3][5] = { {10, 0, 0, 0, 0},
                   {9, 0, 0, 0, 0 }};
 */
 //                                                0=Tune/cursor 1=Mode 2=AGC 3=Pre 4=VOX 5=Band 6=Mem 7,8,9,10=freq
-uint8_t  band_vars[HMI_NUM_OPT_BPF][BAND_VARS_SIZE] =  { {4,0,2,3,0,0,0, b0_0, b0_1, b0_2, b0_3},
-                                                  {4,1,2,3,0,1,0, b1_0, b1_1, b1_2, b1_3},
-                                                  {4,1,2,3,0,2,0, b2_0, b2_1, b2_2, b2_3},
-                                                  {4,1,2,3,0,3,0, b3_0, b3_1, b3_2, b3_3},
-                                                  {4,1,2,3,0,4,0, b4_0, b4_1, b4_2, b4_3} };
+uint8_t  band_vars[HMI_NUM_OPT_BPF][BAND_VARS_SIZE] = { {4,2,2,3,0,0,0, b0_0, b0_1, b0_2, b0_3},
+                                                        {4,2,2,3,0,1,0, b1_0, b1_1, b1_2, b1_3},
+                                                        {4,2,2,3,0,2,0, b2_0, b2_1, b2_2, b2_3},
+                                                        {4,2,2,3,0,3,0, b3_0, b3_1, b3_2, b3_3},
+                                                        {4,2,2,3,0,4,0, b4_0, b4_1, b4_2, b4_3} };
 
 
 
@@ -155,21 +155,11 @@ uint8_t  band_vars[HMI_NUM_OPT_BPF][BAND_VARS_SIZE] =  { {4,0,2,3,0,0,0, b0_0, b
 
 
 uint32_t hmi_freq;														// Frequency from Tune state
-uint32_t hmi_step[HMI_NUM_OPT_TUNE] = {10000000, 1000000, 100000, 10000, 1000, 100, 50};	// Frequency digit increments (tune option = cursor position)
+uint32_t hmi_step[HMI_NUM_OPT_TUNE] = {100000, 10000, 1000, 100, 10};	// Frequency digit increments (tune option = cursor position)
 //#define HMI_MAXFREQ		30000000
 //#define HMI_MINFREQ		     100
-const uint32_t hmi_maxfreq[HMI_NUM_OPT_BPF] = {2500000, 6000000, 10489777, 24000000, 40000000};	// max freq for each band from pass band filters
-const uint32_t hmi_minfreq[HMI_NUM_OPT_BPF] = {1000000, 2000000,  5000000, 10000000, 20000000};	  // min freq for each band from pass band filters
-
-#ifdef PY2KLA_setup
-#define HMI_MULFREQ          4			// Factor between HMI and actual frequency
-#else
-#define HMI_MULFREQ          1      // Factor between HMI and actual frequency
-																		// Set to 1, 2 or 4 for certain types of mixer
-#endif
-
-															
-
+const uint32_t hmi_maxfreq[HMI_NUM_OPT_BPF] = {999950, 999950, 999950, 999950, 999950};	// max freq for each band from pass band filters
+const uint32_t hmi_minfreq[HMI_NUM_OPT_BPF] = {500000, 500000, 500000, 500000, 500000};	  // min freq for each band from pass band filters
 
 
 /*
@@ -401,8 +391,8 @@ void Setup_Band(uint8_t band)
 
   //set the new band to display and freq
 
-	ADF4360_SETFREQ(0, HMI_MULFREQ*hmi_freq);			// Set freq to hmi_freq (MULFREQ depends on mixer type)
-	ADF4360_SETPHASE(0, 1);								// Set phase to 90deg (depends on mixer type)
+	ADF4360_SETFREQ(0, hmi_freq);			// Set freq to hmi_freq (in Hz)
+	// ADF4360_SETPHASE(0, 1);								// Set phase to 90deg (depends on mixer type)
 	
 	//ptt_state = 0;
 	ptt_external_active = false;
@@ -856,13 +846,18 @@ void hmi_evaluate(void)   //hmi loop
 
   if(hmi_freq_old != hmi_freq)
   {
-    ADF4360_SETFREQ(0, HMI_MULFREQ*hmi_freq);
+    ADF4360_SETFREQ(0, hmi_freq); //Frequency in Hz
     //freq  (from encoder)
-    sprintf(s, "%5.3f", (double)hmi_freq/1000.0);
+    sprintf(s, "%3.3f", (double)hmi_freq/1000.0);
     tft_writexy_plus(3, TFT_YELLOW, TFT_BLACK, 2,0,2,20,(uint8_t *)s);
+    // uint16_t frq_i = (int)(hmi_freq/1000);
+    // uint16_t frq_f = ((hmi_freq/1000) - frq_i)*1000;
+    // sprintf(s, "  %03d.%03d", frq_i,frq_f);
+    // tft_writexy_plus(3, TFT_YELLOW, TFT_BLACK, 2,0,2,20,(uint8_t *)s);
+
     //cursor (writing the freq erase the cursor)
-//    tft_cursor_plus(3, TFT_YELLOW, 2+(hmi_menu_opt_display>4?6:hmi_menu_opt_display), 0, 2, 20);
-    tft_cursor_plus(3, TFT_YELLOW, 2+(band_vars[hmi_band][HMI_S_TUNE]>4?6:band_vars[hmi_band][HMI_S_TUNE]), 0, 2, 20);
+   tft_cursor_plus(3, TFT_YELLOW, 2+(hmi_menu_opt_display>2?hmi_menu_opt_display+1:hmi_menu_opt_display), 0, 2, 20);
+
     display_fft_graf_top();  //scale freqs
     hmi_freq_old = hmi_freq;
   }
@@ -983,7 +978,7 @@ void hmi_evaluate(void)   //hmi loop
   		sprintf(s, "%s   %s   %s        ", hmi_o_vox[band_vars[hmi_band][HMI_S_VOX]], hmi_o_agc[band_vars[hmi_band][HMI_S_AGC]], hmi_o_pre[band_vars[hmi_band][HMI_S_PRE]]);
       tft_writexy_(1, TFT_BLUE, TFT_BLACK,0,0,(uint8_t *)s);  
       //cursor
-      tft_cursor_plus(3, TFT_YELLOW, 2+(hmi_menu_opt_display>4?6:hmi_menu_opt_display), 0, 2, 20);    
+      tft_cursor_plus(3, TFT_YELLOW, 2+(hmi_menu_opt_display>2?hmi_menu_opt_display+1:hmi_menu_opt_display), 0, 2, 20);    
   		break;
   	case HMI_S_MODE:
   		sprintf(s, "Set Mode: %s        ", hmi_o_mode[hmi_menu_opt_display]);

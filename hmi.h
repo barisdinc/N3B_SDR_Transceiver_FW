@@ -46,7 +46,7 @@ extern "C" {
 
 
 /* Sub menu number of options (string sets) */
-#define HMI_NUM_OPT_TUNE	7  // = num pos cursor
+#define HMI_NUM_OPT_TUNE	5  // = num pos cursor
 #define HMI_NUM_OPT_MODE	4
 #define HMI_NUM_OPT_AGC	3
 #define HMI_NUM_OPT_PRE	5

@@ -3,7 +3,7 @@
 #include "N3B.h"
 #include "hmi.h"
 #include "dsp.h"
-//#include "adf4360.h"
+#include "adf4360.h"
 // #include "hmc830.h"
 #include "monitor.h"
 #include "relay.h"
@@ -31,7 +31,7 @@ void N3B_setup(void)  //main
   
 	/* Initialize units */
 	mon_init();										// Monitor shell on stdio
-	//adf4360_init();										// VFO control unit
+	adf4360_init();										// VFO control unit
   // HMC830_Init(HMC830_HMC_MODE);
   display_tft_setup();   //moved to setup0 to write into display from the beggining
 	hmi_init();										// HMI user inputs
@@ -89,7 +89,7 @@ void N3B_loop(void)
   if((uint16_t)(tim_count - tim_loc) >= (uint16_t)LOOP_MS)  //run the tasks every 100ms  (LOOP_MS = 100)
   {
     hmi_evaluate();               // Refresh HMI
-    //adf4360_evaluate();                // Refresh VFO settings
+    adf4360_evaluate();                // Refresh VFO settings
     mon_evaluate();               // Check monitor input
     dsp_loop();  //spend more time here for FFT and graphic
     display_tft_loop();           // Refresh display

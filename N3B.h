@@ -11,7 +11,9 @@ extern "C" {
 
 #define LOOP_MS    100  //100 miliseconds
 
-#define RX_IF_FREQ  9750000
+#define RX_IF_FREQ    9750000000
+#define RX_SHFT_FREQ  10489000000 - RX_IF_FREQ
+
 
 void N3B_info(void);
 void N3B_setup(void);

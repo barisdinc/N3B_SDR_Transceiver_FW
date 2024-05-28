@@ -8,11 +8,11 @@ extern "C" {
 #define ADF_LE  13
 #define ADF_CLK 14
 #define ADF_DAT 15
-#define ADF_MUX 28
+// #define ADF_MUX 28
 
 
 #define CRYSTAL 10000 //10MHz 10000KHz
-#define PFD     500   //500KHz
+#define PFD     12   //500KHz
 #define R_COUNTER (CRYSTAL)/(PFD)
  
 typedef struct
@@ -48,8 +48,8 @@ int  adf4360_getreg(uint8_t *data, uint8_t reg, uint8_t len);
 void adf4360_init(void);
 void adf4360_evaluate(void);
 
-#define FREQ_RX_MAX 740000000
-#define FREQ_RX_MIN 739000000
+#define FREQ_RX_MAX 999990
+#define FREQ_RX_MIN 500000
 
 
 #define ADF4360_GETFREQ(i)		((((i)>=0)&&((i)<2))?vfo[(i)].freq:0)
