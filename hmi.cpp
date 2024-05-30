@@ -362,15 +362,15 @@ void Setup_Band(uint8_t band)
       }
     }
 */
-	//hmi_freq = 7050000UL;							// Initial frequency
+	hmi_freq = 777000UL;							// Initial frequency
   //get freq from DFLASH band data
-  hmi_freq = band_vars[band][HMI_NMENUS];
-  hmi_freq <<= 8;        
-  hmi_freq += band_vars[band][HMI_NMENUS+1];
-  hmi_freq <<= 8;        
-  hmi_freq += band_vars[band][HMI_NMENUS+2];
-  hmi_freq <<= 8;        
-  hmi_freq += band_vars[band][HMI_NMENUS+3];
+  // hmi_freq = band_vars[band][HMI_NMENUS];
+  // hmi_freq <<= 8;        
+  // hmi_freq += band_vars[band][HMI_NMENUS+1];
+  // hmi_freq <<= 8;        
+  // hmi_freq += band_vars[band][HMI_NMENUS+2];
+  // hmi_freq <<= 8;        
+  // hmi_freq += band_vars[band][HMI_NMENUS+3];
 
   if(hmi_freq > hmi_maxfreq[band])  //checking boudaries
     {
@@ -397,7 +397,8 @@ void Setup_Band(uint8_t band)
 	//ptt_state = 0;
 	ptt_external_active = false;
 	
-	dsp_setmode(band_vars[band][HMI_S_MODE]);  //MODE_USB=0 MODE_LSB=1  MODE_AM=2  MODE_CW=3
+	//dsp_setmode(band_vars[band][HMI_S_MODE]);  //MODE_USB=0 MODE_LSB=1  MODE_AM=2  MODE_CW=3
+  dsp_setmode(0);  //MODE_USB=0 MODE_LSB=1  MODE_AM=2  MODE_CW=3
 	dsp_setvox(band_vars[band][HMI_S_VOX]);
 	dsp_setagc(band_vars[band][HMI_S_AGC]);	
 	relay_setattn(hmi_pre[band_vars[band][HMI_S_PRE]]);

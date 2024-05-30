@@ -12,7 +12,7 @@ extern "C" {
 
 
 #define CRYSTAL 10000 //10MHz 10000KHz
-#define PFD     12   //500KHz
+#define PFD     10   //500KHz
 #define R_COUNTER (CRYSTAL)/(PFD)
  
 typedef struct

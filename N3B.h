@@ -12,7 +12,9 @@ extern "C" {
 #define LOOP_MS    100  //100 miliseconds
 
 #define RX_IF_FREQ    9750000000
-#define RX_SHFT_FREQ  10489000000 - RX_IF_FREQ
+#define LNB_DRIFT     0 //60000
+#define RX_SHFT_FREQ  10489000000 - RX_IF_FREQ + LNB_DRIFT
+
 
 
 void N3B_info(void);
