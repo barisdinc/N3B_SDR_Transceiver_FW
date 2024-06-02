@@ -11,8 +11,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 # initalize pico_sdk from installed location
 # (note this can come from environment, CMake cache etc)
-# set(PICO_SDK_PATH "/Users/barisdinc/PICO/pico-sdk")
-# set(PICO_SDK_PATH "../../pico-sdk/")
+# set(PICO_SDK_PATH "C:/Users/Arjan/Documents/Pico/pico-sdk")
 
 # Pull in Raspberry Pi Pico SDK (must be before project)
 include(pico_sdk_import.cmake)
@@ -23,19 +22,17 @@ project(N3B_RX C CXX ASM)
 pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
-# n3b_rx_main.c	main loop and initialisation of the software
-#//TODO:complete the list of files
-add_executable(N3B_RX n3b_rx_main.c hardware_init.c debug_interface.c 
-				display_ili9341.c
-				user_interface.c
-				adf4360.c
-				lib/assert.c
-				lib/ili9341/ili9341.c
-				)
+# N3B.c		main loop and initialisation of the software
+# adf4306.c	The drivers for setting output frequency and phase in the adf4306 chip
+# dsp.c		The signal processing stuff, either timedomain or frequency domain
+# fix_fft.c	The FFT transformations in fixed point format
+# hmi.c		All user interaction, controlling freq, modulation, levels, etc
+# monitor.c	A tty shell on a serial interface
+add_executable(N3B_RX n3b_rx_main.c dsp.c fix_fft.c hmi.c monitor.c ili9341.c adf4360.c)
 
 target_compile_options(N3B_RX PRIVATE -Wall)
 pico_set_program_name(N3B_RX "N3B_RX")
-pico_set_program_version(N3B_RX "0.0.1")
+pico_set_program_version(N3B_RX "0.2")
 
 # Pull in our pico_stdlib which aggregates commonly used features
 target_link_libraries(N3B_RX pico_stdlib)
@@ -48,7 +45,6 @@ pico_enable_stdio_usb(N3B_RX 1)
 target_link_libraries(N3B_RX
         pico_stdlib
 		pico_multicore
-		hardware_i2c
 		hardware_spi
 		hardware_pwm
         hardware_gpio

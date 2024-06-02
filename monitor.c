@@ -1,13 +1,12 @@
 /*
- * debug_interface.c
+ * monitor.c
  *
- * Created: May 2024
- * Author: Baris Dinc OH2UDS/TA7W
+ * Created: Mar 2021
+ * Author: Arjan te Marvelde
  * 
- * Main debug  output for device status monitoring and 
- * provides a CLI (Command Line Interface) for user interaction
  * Command shell on stdin/stdout.
  * Collects characters and parses commandstring.
+ * Additional commands can easily be added.
  */ 
 
 #include <stdio.h>
@@ -16,9 +15,12 @@
 #include "pico/stdlib.h"
 #include "pico.h"
 #include "pico/bootrom.h"
-#include "display_ili9341.h"
-//#include "dsp.h"
-#include "debug_interface.h"
+
+#include "n3b_rx_main.h"
+#include "dsp.h"
+#include "monitor.h"
+#include "adf4360.h"
+
 
 // Some special character ASCII codes
 #define CR			13
@@ -28,7 +30,8 @@
 #define CMD_LEN		80
 #define CMD_ARGS	16
 
-char debug_cli_cmd[CMD_LEN+1];							// Command string buffer
+
+char mon_cmd[CMD_LEN+1];							// Command string buffer
 char *argv[CMD_ARGS];								// Argument pointers
 int nargs;											// Nr of arguments
 
@@ -42,20 +45,22 @@ typedef struct
 } shell_t;
 
 
+
+
 /*** Initialisation, called at startup ***/
-void debug_interface_init()
+void mon_init()
 {
     stdio_init_all();								// Initialize Standard IO
-	debug_cli_cmd[CMD_LEN] = '\0';						// Termination to be sure
+	mon_cmd[CMD_LEN] = '\0';						// Termination to be sure
 	printf("\n");
-	printf("======================\n");
-	printf(" N3B QO-100 Terminal  \n");
-	printf("                      \n");
-	printf("       Baris DINC     \n");
-	printf("       OH2UDS/TA7W    \n");
-	printf("           2024       \n");
-	printf("======================\n");
-	printf("N3B> ");								// prompt
+	printf("====================\n");
+	printf(" N3B QO-100         \n");
+	printf("  & VHF/UHF/SHF     \n");
+	printf("  Full Duplex SDR   \n");
+	printf("    Transceiver     \n");
+	printf("        2024        \n");
+	printf("====================\n");
+	printf("Pico> ");								// prompt
 }
 
 
@@ -67,49 +72,113 @@ void debug_interface_init()
 /*
  * Reboots the Pico as a USB mass storage device, ready to be programmed
  */
-void debug_interface_flash(void)
+void mon_flash(void)
 {
 	reset_usb_boot(1<<PICO_DEFAULT_LED_PIN,0);
 }
 
+/* 
+ * Dumps a defined range of Si5351 registers 
+ */
+uint8_t si5351_reg[200];
+void mon_si(void)
+{
+	int base=0, nreg=0, i;
+
+	if (nargs>2) 
+	{
+		base = atoi(argv[1]);
+		nreg = atoi(argv[2]);
+	}
+	if ((base<0)||(base+nreg>200)) return;
+
+	for (i=0; i<200; i++) si5351_reg[i] = 0xaa;
+	// si_getreg(si5351_reg, (uint8_t)base, (uint8_t)nreg);
+	for (i=0; i<nreg; i++) printf("%03d : %02x \n", base+i, (int)(si5351_reg[i]));
+	printf("\n");
+}
 
 /* 
- * Dumps the entire built-in and programmed characterset on the LCD 
+ * Dumps the VFO registers 
  */
-void debug_interface_display_test(void)
+vfo_t m_vfo;
+void mon_vfo(void)
 {
-	printf("Checking Display...");
-	display_ili9341_test();
-	printf("\n");
+	int i;
+
+	if (nargs>1) 
+		i = atoi(argv[1]);
+	if ((i<0)||(i>1)) return;
+
+	// si_getvfo(i, &m_vfo);														// Get local copy
+	// printf("Frequency: %lu\n", m_vfo.freq);
+	// printf("Phase    : %u\n", (int)(m_vfo.phase));
+	// printf("Ri       : %lu\n", (int)(m_vfo.ri));
+	// printf("MSi      : %lu\n", (int)(m_vfo.msi));
+	// printf("MSN      : %g\n\n", m_vfo.msn);
 }
 
 
 /* 
+ * Dumps the entire built-in and programmed characterset on the display 
+ */
+void mon_lt(void)
+{
+	printf("Check ili9341...");
+	// ili_test();
+	printf("\n");
+}
+
+
+/*
+ * Toggles the PTT status, overriding the HW signal
+ */
+bool ptt = false;
+void mon_pt(void)
+{
+	if (ptt)
+	{
+		ptt = false;
+		printf("PTT released\n");
+	}
+	else
+	{
+		ptt = true;
+		printf("PTT active\n");
+	}
+	tx_enabled = ptt;
+}
+
+/* 
  * Checks for overruns 
  */
-//extern volatile uint32_t dsp_overrun;
-//extern volatile uint32_t dsp_tickx;
-//extern volatile int scale0;
-//extern volatile int scale1;
-void debug_interface_overrruns(void)
+extern volatile uint32_t dsp_overrun;
+#if DSP_FFT == 1
+extern volatile uint32_t dsp_tickx;
+extern volatile int scale0;
+extern volatile int scale1;
+#endif
+void mon_or(void)
 {
-	//printf("DSP overruns   : %d\n", dsp_overrun);
-	//printf("DSP loop load  : %lu%%\n", (100*dsp_tickx)/512);	
-	//printf("FFT scale = %d, iFFT scale = %d\n", scale0, scale1);	
+	printf("DSP overruns   : %d\n", dsp_overrun);
+#if DSP_FFT == 1
+	printf("DSP loop load  : %lu%%\n", (100*dsp_tickx)/512);	
+	printf("FFT scale = %d, iFFT scale = %d\n", scale0, scale1);	
+#endif
 }
 
 
 /* 
  * ADC and AGC levels 
  */
-//extern volatile int32_t  rx_agc;
-//extern volatile int adccnt;
-void debug_interface_adc(void)
+extern volatile int32_t  rx_agc;
+extern volatile int adccnt;
+void mon_adc(void)
 {
 	// Print results
-	//printf("RSSI: %5u\n", s_rssi);
-	//printf("AGC : %5d\n", rx_agc);
-	//printf("ADCc: %5d\n", adccnt);
+	printf("RSSI: %5u\n", s_rssi);
+	printf("AGC : %5d\n", rx_agc);
+	printf("ADCc: %5d\n", adccnt);
 }
 
 
@@ -117,19 +186,17 @@ void debug_interface_adc(void)
 /*
  * Command shell table, organize the command functions above
  */
-#define NCMD	4
+#define NCMD	6
 shell_t shell[NCMD]=
 {
-	{"flash", 5, &debug_interface_flash, "flash", "Reboots into USB bootloader mode"},
-	//{"adf",  2, &debug_interface_adf,  "si <start> <nr of reg>", "Dumps Si5351 registers"},
-	//{"vfo", 3, &debug_interface_vfo, "vfo <id>", "Dumps vfo[id] registers"},
-	{"ilitest",  7, &debug_interface_display_test,  "ilitest (no parameters)", "ILI 9341 LCD test, dumps characterset on LCD"},
-	{"or",  2, &debug_interface_overrruns,  "or (no parameters)", "Returns overrun information"},
-	//{"pt",  2, &debug_interface_pt,  "pt (no parameters)", "Toggles PTT status"},
-	//{"bp",  2, &debug_interface_bp,  "bp {r|w} <value>", "Read or Write BPF relays"},
-	//{"rx",  2, &debug_interface_rx,  "rx {r|w} <value>", "Read or Write RX relays"},
-	{"adc", 3, &debug_interface_adc, "adc (no parameters)", "Dump latest ADC readouts"}
+	{"flash", 5, &mon_flash, "flash", "Reboots into USB bootloader mode"},
+	{"vfo", 3, &mon_vfo, "vfo <id>", "Dumps vfo[id] registers"},
+	{"lt",  2, &mon_lt,  "lt (no parameters)", "Ili test, dumps characterset on display"},
+	{"or",  2, &mon_or,  "or (no parameters)", "Returns overrun information"},
+	{"pt",  2, &mon_pt,  "pt (no parameters)", "Toggles PTT status"},
+	{"adc", 3, &mon_adc, "adc (no parameters)", "Dump latest ADC readouts"}
 };
+
 
 
 /*** ---------------------------------------- ***/
@@ -142,7 +209,7 @@ shell_t shell[NCMD]=
 /*
  * Command line parser
  */
-void debug_interface_parse(char* s)
+void mon_parse(char* s)
 {
 	char *p;
 	int  i;
@@ -170,11 +237,11 @@ void debug_interface_parse(char* s)
 }
 
 /*
- * Debug interface evaluation process 
+ * Monitor process 
  * This function collects characters from stdin until CR
  * Then the command is send to a parser and executed.
  */
-void debug_interface_evaluate(void)
+void mon_evaluate(void)
 {
 	static int i = 0;
 	int c = getchar_timeout_us(10L);				// NOTE: this is the only SDK way to read from stdin
@@ -184,18 +251,18 @@ void debug_interface_evaluate(void)
 	{
 	case CR:										// CR : need to parse command string
 		putchar('\n');								// Echo character, assume terminal appends CR
-		debug_cli_cmd[i] = '\0';							// Terminate command string		
+		mon_cmd[i] = '\0';							// Terminate command string		
 		if (i>0)									// something to parse?
-			debug_interface_parse(debug_cli_cmd);						// --> process command
+			mon_parse(mon_cmd);						// --> process command
 		i=0;										// reset index
-		printf("N3B> ");							// prompt
+		printf("Pico> ");							// prompt
 		break;
 	case LF:
 		break;										// Ignore, assume CR as terminator
 	default:
 		if ((c<32)||(c>=128)) break;				// Only allow alfanumeric
 		putchar((char)c);							// Echo character
-		debug_cli_cmd[i] = (char)c;						// store in command string
+		mon_cmd[i] = (char)c;						// store in command string
 		if (i<CMD_LEN) i++;							// check range and increment
 		break;
 	}

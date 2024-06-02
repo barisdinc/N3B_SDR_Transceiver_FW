@@ -1,17 +1,15 @@
 #ifndef _ADF4360_H
 #define _ADF4360_H
 
-#include <stdint.h>
-
 
 #define ADF_LE  13
 #define ADF_CLK 14
 #define ADF_DAT 15
-//#define ADF_MUX 4 //We dforgot to connect MUX in RX board
+// #define ADF_MUX 28
 
 
 #define CRYSTAL 10000 //10MHz 10000KHz
-#define PFD     500   //500KHz
+#define PFD     10   //500KHz
 #define R_COUNTER (CRYSTAL)/(PFD)
  
 typedef struct
@@ -43,12 +41,11 @@ typedef struct
 extern vfo_t vfo[1];	// vfo[0] is for RX and vfo[1] is TX, which is on TX board
 
 
-int  adf4360_getreg(uint8_t *data, uint8_t reg, uint8_t len);
 void adf4360_init(void);
-void adf4360_evaluate(void);
+void adf4360_evaluate(uint32_t freq);
 
-#define FREQ_RX_MAX 740000000
-#define FREQ_RX_MIN 739000000
+#define FREQ_RX_MAX 999990
+#define FREQ_RX_MIN 500000
 
 
 #define ADF4360_GETFREQ(i)		((((i)>=0)&&((i)<2))?vfo[(i)].freq:0)
@@ -56,6 +53,7 @@ void adf4360_evaluate(void);
 #define ADF4360_DECFREQ(i, d)	if ((((i)>=0)&&((i)<2))&&((vfo[(i)].freq)>(FREQ_RX_MIN + (d)))) { (vfo[(i)].freq) -= (d); vfo[(i)].flag = 1;}
 #define ADF4360_SETFREQ(i, f)	if ((((i)>=0)&&((i)<2))&&((f)<FREQ_RX_MAX)&&(f)>FREQ_RX_MIN) { vfo[(i)].freq = (f); vfo[(i)].flag = 1;}
 #define ADF4360_SETPHASE(i, p)	if (((i)>=0)&&((i)<2)) {vfo[(i)].phase = ((uint8_t)p)&3; vfo[(i)].flag = 1;}
+
 
 
 
