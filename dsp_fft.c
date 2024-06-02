@@ -113,6 +113,8 @@ int BIN_FC	= 256;
 #define BIN_900		 	   59
 #define BIN_3000		  197
 
+static bool fft_completed = 0;
+
 /*
  * This function returns the address of our spectrum buffer with FFTSIZE elements
  * that will be used for displaying the fft graph
@@ -123,6 +125,10 @@ int16_t* get_fft_buffer_address()
 	return &XI_fft_buf[0];
 }
 
+bool is_fft_completed()
+{
+	return fft_completed;
+}
 
 /*
  * This applies a bandpass filter to XI and XQ buffers
@@ -219,7 +225,9 @@ bool __not_in_flash_func(rx)(void)
 
 	
 	/*** Execute FFT ***/
+	fft_completed = false;
 	scale0 = fix_fft(&XI_buf[0], &XQ_buf[0], false);						// Frequency domain filter input
+	fft_completed = true;
 
 	// Prepare the buffer for spectrum display
 	xip = &XI_buf[0];xifftp = &XI_fft_buf[0];

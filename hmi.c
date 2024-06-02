@@ -39,7 +39,10 @@
 #include "hmi.h"
 #include "dsp.h"
 
-	  static int old_sdr_freq = 0;
+static int old_sdr_freq = 0;
+static uint16_t waterfall_buffer[300][40];
+static uint8_t waterfall_active_row = 0;	  
+	  
 
 /*
  * GPIO masks
@@ -238,6 +241,84 @@ void hmi_callback(uint gpio, uint32_t events)
 }
 
 
+#define SPECTRUM_WIDTH 300
+#define SPECTRUM_HEIGHT 40
+
+
+
+/*
+ * Draw Spectrum
+ * TODO: add logaritmic scale
+ *       if valus is same don't draw
+ * 		 delete in length of old level
+ * 		 replace 300 with a define
+*/
+
+
+void hmi_draw_spectrum(void)
+{
+	int16_t* fft_buffer = get_fft_buffer_address();
+
+	if (waterfall_active_row == SPECTRUM_HEIGHT) waterfall_active_row = 0; //go to next buffer for net call
+	uint16_t* wf_act_p = &waterfall_buffer[waterfall_active_row][0]; //target memory is the first element of active waterfall buffer
+
+int imm = 0;
+	for (int spectrum_pos = 0; spectrum_pos<SPECTRUM_WIDTH; spectrum_pos++)
+	{
+	//printf("%d\n",*fft_buffer++ >> 8);
+	// ili9341_draw_pixel(aa,150, *fft_buffer++);
+	//spectrum
+	ili9341_draw_line(spectrum_pos+10,100,spectrum_pos+10,160, ILI9341_BLACK);//*fft_buffer++);
+	uint16_t signal_strength = abs(*fft_buffer++ + *fft_buffer++ + *fft_buffer++);
+	signal_strength = signal_strength>>10;
+
+	ili9341_draw_line(spectrum_pos+10,160,spectrum_pos+10,160-signal_strength, ILI9341_GREEN);//*fft_buffer++);
+	//waterfall
+	uint16_t waterfall_color = signal_strength << 11 | signal_strength << 5 | signal_strength;
+
+	
+	*wf_act_p = signal_strength; // waterfall_active_row * 300 + imm;//
+	imm++;
+	wf_act_p++;
+	
+	ili9341_draw_pixel(spectrum_pos+10,168+waterfall_active_row, signal_strength<<10);//*fft_buffer++);
+	
+	//printf("[%d] %d %x\n", waterfall_active_row, signal_strength, waterfall_color);
+	}	
+
+	waterfall_active_row++;
+	ILI9341_setAddrWindow(10, 190, 310, 219);
+	// ILI9341_copyFrameBufferToDisplay(&waterfall_buffer[0][0], 300, 40); //redraw the  waterfall
+
+}
+
+
+/*
+ * Draw bandwidth
+ * TODO: add bandwidth parameter
+ *       add mod type
+ * 		 add Cnter frequency
+*/
+
+void hmi_draw_bandwidth(void)
+{
+	  int sdr_freq =  ((vfo[0].freq/100) % 30) ;
+	//   ili9341_draw_line(sdr_freq*10,220,sdr_freq*10,200, ILI9341_RED);//*fft_buffer++);
+	  ili9341_draw_line(old_sdr_freq,167,old_sdr_freq+5,162, ILI9341_BLACK);
+	  ili9341_draw_line(old_sdr_freq+5,162,old_sdr_freq+50,162, ILI9341_BLACK);
+	  ili9341_draw_line(old_sdr_freq+50,162,old_sdr_freq+55,167, ILI9341_BLACK);
+
+	  ili9341_draw_line(sdr_freq,167,sdr_freq+5,162, ILI9341_CYAN);
+	  ili9341_draw_line(sdr_freq+5,162,sdr_freq+50,162, ILI9341_CYAN);
+	  ili9341_draw_line(sdr_freq+50,162,sdr_freq+55,167, ILI9341_CYAN);
+
+	//   printf("%d-------------%d------------\n", sdr_freq, old_sdr_freq);
+	  old_sdr_freq = sdr_freq;
+
+}
+
+
+
 /*
  * Redraw the  display, representing current state
  * This function is invoked regularly from the main loop.
@@ -256,37 +337,13 @@ void hmi_evaluate(void)
 	sprintf(s, "%s", hmi_o_mode[hmi_sub[HMI_S_MODE]]);
 	ili9341_draw_string(10,70,s, ILI9341_LIGHTGREY, ILI9341_BLACK,3);	
 
-	int16_t* fft_buffer = get_fft_buffer_address();
-
-	for (int aa = 10; aa<310; aa++)
+	if (is_fft_completed())
 	{
-	//printf("%d\n",*fft_buffer++ >> 8);
-	// ili9341_draw_pixel(aa,150, *fft_buffer++);
-	//spectrum
-	ili9341_draw_line(aa+1,100,aa,160, ILI9341_BLACK);//*fft_buffer++);
-	ili9341_draw_line(aa,160,aa,160-((abs(*fft_buffer++))>>9), ILI9341_GREEN);//*fft_buffer++);
-	//waterfall
-	ili9341_draw_pixel(aa,168, *fft_buffer);//*fft_buffer++);
-	}	
-	  int sdr_freq =  ((vfo[0].freq/10) % 300) ;
-	//   ili9341_draw_line(sdr_freq*10,220,sdr_freq*10,200, ILI9341_RED);//*fft_buffer++);
-	  ili9341_draw_line(old_sdr_freq,167,old_sdr_freq+5,162, ILI9341_BLACK);
-	  ili9341_draw_line(old_sdr_freq+5,162,old_sdr_freq+50,162, ILI9341_BLACK);
-	  ili9341_draw_line(old_sdr_freq+50,162,old_sdr_freq+55,167, ILI9341_BLACK);
+		hmi_draw_spectrum();
+		hmi_draw_bandwidth();
+	}
 
-	  ili9341_draw_line(sdr_freq,167,sdr_freq+5,162, ILI9341_CYAN);
-	  ili9341_draw_line(sdr_freq+5,162,sdr_freq+50,162, ILI9341_CYAN);
-	  ili9341_draw_line(sdr_freq+50,162,sdr_freq+55,167, ILI9341_CYAN);
-
-	//   printf("%d-------------%d------------\n", sdr_freq, old_sdr_freq);
-	  old_sdr_freq = sdr_freq;
-
-	ILI9341_setAddrWindow(10, 180, 310, 209);
-	ILI9341_copyFrameBufferToDisplay(fft_buffer, 300, 40);
-
-
-
-	// Print bottom line of dsiplay, depending on state
+	// Print bottom line of display, depending on state
 	switch (hmi_state)
 	{
 	case HMI_S_TUNE:

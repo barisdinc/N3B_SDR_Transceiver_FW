@@ -447,10 +447,14 @@ void ILI9341_copyFrameBufferToDisplay(uint16_t* frameBuffer, uint16_t width, uin
 
     gpio_put(ILI9341_DC_PIN, 1);
     gpio_put(ILI9341_CS_PIN, 0);
+    
     for (uint32_t i = 0; i < width*height; i++) {
-        spi_write_blocking(spi1, &frameBuffer[i], 2);//was 1
+        // if (*frameBuffer > 0)  printf("%d \n", *frameBuffer);
+        spi_write_blocking(spi1,frameBuffer++, 2);//was 1
+
     }
     gpio_put(ILI9341_CS_PIN, 1);
+    // sleep_ms(2000);
 
 
     // TFT_CS_PORT |= (1 << TFT_CS_PIN);

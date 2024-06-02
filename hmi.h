@@ -11,6 +11,7 @@
 
 extern bool ptt_active;
 
+void hmi_draw_spectrum(void);
 void hmi_init(void);
 void hmi_evaluate(void);
 

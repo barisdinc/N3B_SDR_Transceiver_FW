@@ -12,7 +12,6 @@
 
 // #include "hardware/i2c.h"
 
-
 /* Set this to 1 when FFT engine must be used */
 
 #define DSP_FFT					1
@@ -43,6 +42,7 @@
 
 
 int16_t* get_fft_buffer_address(void);
+bool is_fft_completed();
 
 
 
