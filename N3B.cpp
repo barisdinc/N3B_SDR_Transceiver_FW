@@ -22,15 +22,11 @@ void N3B_info(void)  //main
 void N3B_setup(void)  //main
 {
  
- #if TX_METHOD == I_Q_QSE   //original project
-   Wire.begin();            //i2c0 master to Si5351
+   Wire.begin();            //i2c0 master to TX_MCU
    //Wire.setClock(200000);   // Set i2c0 clock speed (default=100k)
- #endif
-   Wire1.begin();           //i2c1   used for switching band and atten/LNA
-
   
 	/* Initialize units */
-	mon_init();										// Monitor shell on stdio
+	// mon_init();										// Monitor shell on stdio
 	adf4360_init();										// VFO control unit
   // HMC830_Init(HMC830_HMC_MODE);
   display_tft_setup();   //moved to setup0 to write into display from the beggining
@@ -90,7 +86,7 @@ void N3B_loop(void)
   {
     hmi_evaluate();               // Refresh HMI
     adf4360_evaluate();                // Refresh VFO settings
-    mon_evaluate();               // Check monitor input
+    // mon_evaluate();               // Check monitor input
     dsp_loop();  //spend more time here for FFT and graphic
     display_tft_loop();           // Refresh display
     //it takes 50ms for the tasks (most in hmi_evaluate() to plot the waterfall)

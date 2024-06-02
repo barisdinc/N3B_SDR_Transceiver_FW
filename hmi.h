@@ -21,7 +21,7 @@ extern "C" {
 #define HMI_S_MODE			1
 #define HMI_S_AGC			2
 #define HMI_S_PRE			3
-#define HMI_S_VOX			4
+#define HMI_S_TXMOD			4
 #define HMI_S_BPF			5
 #define HMI_S_DFLASH   6
 #define HMI_S_AUDIO   7
@@ -50,7 +50,7 @@ extern "C" {
 #define HMI_NUM_OPT_MODE	4
 #define HMI_NUM_OPT_AGC	3
 #define HMI_NUM_OPT_PRE	5
-#define HMI_NUM_OPT_VOX	4
+#define HMI_NUM_OPT_TXMOD	4
 #define HMI_NUM_OPT_BPF	5
 #define HMI_NUM_OPT_DFLASH	2
 #define HMI_NUM_OPT_AUDIO 4
@@ -127,11 +127,6 @@ extern uint8_t  band_vars[HMI_NUM_OPT_BPF][BAND_VARS_SIZE];
 //extern uint8_t  hmi_sub[HMI_NMENUS];							// Stored option selection per state
 extern uint32_t hmi_freq;  
 extern uint8_t  hmi_band;	
-extern bool tx_enabled;
-extern bool ptt_internal_active;    //PTT output = true for vox, mon and mem
-extern bool ptt_external_active;
-extern bool ptt_vox_active;	
-extern bool ptt_mon_active;
 extern bool ptt_aud_active;
 
 

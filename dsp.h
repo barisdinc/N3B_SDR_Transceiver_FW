@@ -73,7 +73,6 @@ extern volatile int16_t adc_result[3];   //
 
 void dsp_setagc(int agc);
 void dsp_setmode(int mode);
-void dsp_setvox(int vox);
 int dsp_getmode(void);
 
 //extern volatile uint16_t adc_audio_ready;

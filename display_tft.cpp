@@ -426,14 +426,7 @@ int16_t aud_samp_trigger;
   //tft.fillRect(0, Y_MIN_DRAW - 10, display_WIDTH, 10, TFT_BLACK);
   tft.fillRect(X_MIN_AUD_GRAPH, Y_MIN_AUD_GRAPH, AUD_GRAPH_NUM_COLS, (AUD_GRAPH_MAX - AUD_GRAPH_MIN + 1), TFT_BLACK);
 
- // if(tx_enabled)
-  {
- //   aud_samp_trigger = AUD_SAMP_MIC;  
-  }
-//  else
-  {
-    aud_samp_trigger = AUD_SAMP_I;
-  }
+  aud_samp_trigger = AUD_SAMP_I;
 
   //find trigger point to start ploting
   for(x=0; x<AUD_GRAPH_NUM_COLS; x++)
@@ -459,7 +452,7 @@ int16_t aud_samp_trigger;
   //plot each variable
   display_aud_graf_var(aud_pos, AUD_SAMP_I, TFT_GREEN);
   display_aud_graf_var(aud_pos, AUD_SAMP_Q, TFT_CYAN);
-  display_aud_graf_var(aud_pos, AUD_SAMP_MIC, TFT_RED);
+  // display_aud_graf_var(aud_pos, AUD_SAMP_MIC, TFT_RED);
   display_aud_graf_var(aud_pos, AUD_SAMP_A, TFT_PINK);
   display_aud_graf_var(aud_pos, AUD_SAMP_PEAK, TFT_YELLOW);
   display_aud_graf_var(aud_pos, AUD_SAMP_GAIN, TFT_MAGENTA);
@@ -517,8 +510,8 @@ void display_tft_setup(void) {
   tft_writexy_plus(1, TFT_CYAN, TFT_BLACK, 8,6,2,0,(uint8_t *)s);
   sprintf(s, "A");
   tft_writexy_plus(1, TFT_PINK, TFT_BLACK, 8,6,3,0,(uint8_t *)s);
-  sprintf(s, "MIC");
-  tft_writexy_plus(1, TFT_RED, TFT_BLACK, 10,4,1,0,(uint8_t *)s);
+  // sprintf(s, "MIC");
+  // tft_writexy_plus(1, TFT_RED, TFT_BLACK, 10,4,1,0,(uint8_t *)s);
   sprintf(s, "PEAK");
   tft_writexy_plus(1, TFT_YELLOW, TFT_BLACK, 10,4,2,0,(uint8_t *)s);
   sprintf(s, "GAIN");

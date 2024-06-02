@@ -25,7 +25,6 @@
  * Encoder channel A triggers on falling edge. 
  * Depending on B level, count is incremented or decremented.
  * 
- * The PTT is connected to GP15 and will be active, except when VOX is used.
  *
  */
 /*
@@ -111,28 +110,27 @@
 
  
 
-//char hmi_o_menu[HMI_NMENUS][8] = {"Tune","Mode","AGC","Pre","VOX"};	// Indexed by hmi_menu  not used - menus done direct in Evaluate()
 char hmi_o_mode[HMI_NUM_OPT_MODE][8] = {"USB","LSB","AM","CW"};			// Indexed by band_vars[hmi_band][HMI_S_MODE]  MODE_USB=0 MODE_LSB=1  MODE_AM=2  MODE_CW=3
 char hmi_o_agc [HMI_NUM_OPT_AGC][8] = {"NoAGC","Slow","Fast"};					// Indexed by band_vars[hmi_band][HMI_S_AGC]
 char hmi_o_pre [HMI_NUM_OPT_PRE][8] = {"-30dB","-20dB","-10dB","0dB","+10dB"};	// Indexed by band_vars[hmi_band][HMI_S_PRE]
-char hmi_o_vox [HMI_NUM_OPT_VOX][8] = {"NoVOX","VOX-L","VOX-M","VOX-H"};		// Indexed by band_vars[hmi_band][HMI_S_VOX]
-#define NoVOX_pos_menu  0   //index for NoVOX option
+char hmi_o_txmod [HMI_NUM_OPT_TXMOD][8] = {"USB","LSB","AM","CW"};			// Indexed by band_vars[hmi_band][HMI_S_MODE]  MODE_USB=0 MODE_LSB=1  MODE_AM=2  MODE_CW=3
+
 char hmi_o_bpf [HMI_NUM_OPT_BPF][8] = {"<2.5","2-6","5-12","10-24","20-40"};
 char hmi_o_dflash [HMI_NUM_OPT_DFLASH][8] = {"Save", "Saving"};  //only save is visible  (saving is used to start the dflash write)
 char hmi_o_audio [HMI_NUM_OPT_AUDIO][20] = {"Rec from TX", "Rec from RX", "Play to TX", "Play to Speaker"};
 
-//const uint8_t  hmi_num_opt[HMI_NMENUS] = { HMI_NUM_OPT_TUNE, HMI_NUM_OPT_MODE, HMI_NUM_OPT_AGC, HMI_NUM_OPT_PRE, HMI_NUM_OPT_VOX, HMI_NUM_OPT_BPF, HMI_NUM_OPT_DFLASH, HMI_NUM_OPT_AUDIO };	 // number of options for each menu
+//const uint8_t  hmi_num_opt[HMI_NMENUS] = { HMI_NUM_OPT_TUNE, HMI_NUM_OPT_MODE, HMI_NUM_OPT_AGC, HMI_NUM_OPT_PRE, HMI_NUM_OPT_TXMOD, HMI_NUM_OPT_BPF, HMI_NUM_OPT_DFLASH, HMI_NUM_OPT_AUDIO };	 // number of options for each menu
 
 
 // Map option to setting
 uint8_t hmi_pre[5] = {REL_ATT_30, REL_ATT_20, REL_ATT_10, REL_ATT_00, REL_PRE_10};
 uint8_t hmi_bpf[5] = {REL_LPF2, REL_BPF6, REL_BPF12, REL_BPF24, REL_BPF40};
 
-uint8_t  hmi_menu;     // menu section 0=Tune/cursor 1=Mode 2=AGC 3=Pre 4=VOX 5=Band 6=Mem  (old hmi_state)
+uint8_t  hmi_menu;     // menu section 0=Tune/cursor 1=Mode 2=AGC 3=Pre 4=TXMOD 5=Band 6=Mem  (old hmi_state)
 uint8_t  hmi_menu_opt_display;	 // current menu option showing on display (it will be copied to band vars on <enter>)  (old hmi_option)
 uint8_t  hmi_band;     // actual band
 
-//                              { cursor, mode, agc, pre, vox, band, mem ok }
+//                              { cursor, mode, agc, pre, txmod, band, mem ok }
 //uint8_t  hmi_sub[HMI_NMENUS] = {      4,    1,   2,   3,   0,    2,      0 };							// Stored option selection per state
 
 /*
@@ -141,7 +139,7 @@ int arr[3][5] = { {10, 0, 0, 0, 0},
                   {8, 0, 0, 0, 0},
                   {9, 0, 0, 0, 0 }};
 */
-//                                                0=Tune/cursor 1=Mode 2=AGC 3=Pre 4=VOX 5=Band 6=Mem 7,8,9,10=freq
+//                                                0=Tune/cursor 1=Mode 2=AGC 3=Pre 4=TXMOD 5=Band 6=Mem 7,8,9,10=freq
 uint8_t  band_vars[HMI_NUM_OPT_BPF][BAND_VARS_SIZE] = { {4,2,2,3,0,0,0, b0_0, b0_1, b0_2, b0_3},
                                                         {4,2,2,3,0,1,0, b1_0, b1_1, b1_2, b1_3},
                                                         {4,2,2,3,0,2,0, b2_0, b2_1, b2_2, b2_3},
@@ -199,14 +197,6 @@ uint32_t audio_play_pos = 0;
 #define AUDIO_TIME_AFTER  (1*(1000/LOOP_MS))      //1s * (1000/LOOP_MS) = 10
 #define AUDIO_TIME_MAIN   ((AUDIO_BUF_MAX/FSAMP_AUDIO)*(1000/LOOP_MS))    //160k/16k * 1000/100 = 100
 
-bool tx_enabled = false;
-bool ptt_internal_active = false;    //PTT output = true for vox, mon and mem
-bool ptt_external_active = false;    //external = from mike
-//these inputs will generate the tx_enabled to transmit
-bool ptt_vox_active = false;	  //if vox whants to transmit
-bool ptt_mon_active = false;
-bool ptt_aud_active = false;
-
 
 uint16_t Aud_Rec_Tx = AUDIO_STOPPED;
 uint16_t Aud_Rec_Rx = AUDIO_STOPPED;
@@ -214,27 +204,6 @@ uint16_t Aud_Play_Tx = AUDIO_STOPPED;
 uint16_t Aud_Play_Spk = AUDIO_STOPPED;
 
 
-
-//***********************************************************************
-//
-//  Audio_Rec_Play - checks if audio menu started
-//                   sets the correspondent command
-//                   shows a counter on display
-// 
-//***********************************************************************
-void Audio_Rec_Play(void)
-{
-  static uint16_t time_main = 0;
-  static uint16_t time_after = 0;
-
-
-  if(Aud_Rec_Tx == AUDIO_RUNNING)
-  {
-    if(ptt_external_active == false)
-    {
-      Aud_Rec_Tx = AUDIO_STOPPED;
-    }
-  }
 /*
 Serialx.println("Time main=" + String(time_main) +
                 "   Aud_Rec_Tx=" + String(Aud_Rec_Tx) +
@@ -243,78 +212,6 @@ Serialx.println("Time main=" + String(time_main) +
                 "   Aud_Play_Spk=" + String(Aud_Play_Spk) +
                 "   ptt_ext_act=" + (ptt_external_active ? "true" : "false"));
 */
-
-  if(time_main > 0)     //if counting time 10s
-  {
-    if( (Aud_Rec_Tx == AUDIO_STOPPED) &&   //<escape> condition  stops audio
-        (Aud_Rec_Rx == AUDIO_STOPPED) &&
-        (Aud_Play_Tx == AUDIO_STOPPED) &&
-        (Aud_Play_Spk == AUDIO_STOPPED) )
-    {
-      time_main = 0;
-      time_after = AUDIO_TIME_AFTER;
-      ptt_aud_active = false;
-    }
-    else
-    {
-      time_main--;
-      if(time_main == 0)
-      {
-        time_after = AUDIO_TIME_AFTER;
-        ptt_aud_active = false;
-
-        Aud_Rec_Tx = AUDIO_STOPPED;
-        Aud_Rec_Rx = AUDIO_STOPPED;
-        Aud_Play_Tx = AUDIO_STOPPED;
-        Aud_Play_Spk = AUDIO_STOPPED;
-      }
-      //if <enter> on any Audio menu, draw a count down window from 0 to 10s
-      display_tft_countdown(true, (AUDIO_TIME_MAIN-time_main)/10);
-    }
-  }
-  else if(time_after > 0)     //if time after 10s, 1s more to clear the count down window
-  {
-    time_after--;
-    if(time_after == 0)
-    {
-      display_tft_countdown(false, 0);     //close count down window
-    }
-    else
-    {
-      //display_tft_countdown(true, AUDIO_TIME_MAIN-time_main);  //not necessary?  already on screen
-    }
-  }
-  else if(Aud_Rec_Tx == AUDIO_START) 
-    {
-      display_tft_countdown(true, 0);
-      if(ptt_external_active == true)
-      {
-        audio_rec_pos = 0;
-        time_main = AUDIO_TIME_MAIN;
-        Aud_Rec_Tx = AUDIO_RUNNING;
-      }
-    }
-  else if(Aud_Rec_Rx == AUDIO_START)
-  {
-    audio_rec_pos = 0;
-    time_main = AUDIO_TIME_MAIN;
-    Aud_Rec_Rx = AUDIO_RUNNING;
-  }
-  else if(Aud_Play_Tx == AUDIO_START)
-  {
-    audio_play_pos = 0;
-    time_main = AUDIO_TIME_MAIN;
-    Aud_Play_Tx = AUDIO_RUNNING;
-    ptt_aud_active = true;
-  }
-  else if(Aud_Play_Spk == AUDIO_START)
-  {
-    audio_play_pos = 0;
-    time_main = AUDIO_TIME_MAIN;
-    Aud_Play_Spk = AUDIO_RUNNING;
-  }
-}
-
 
 
 //***********************************************************************
@@ -395,11 +292,10 @@ void Setup_Band(uint8_t band)
 	// ADF4360_SETPHASE(0, 1);								// Set phase to 90deg (depends on mixer type)
 	
 	//ptt_state = 0;
-	ptt_external_active = false;
 	
 	//dsp_setmode(band_vars[band][HMI_S_MODE]);  //MODE_USB=0 MODE_LSB=1  MODE_AM=2  MODE_CW=3
   dsp_setmode(0);  //MODE_USB=0 MODE_LSB=1  MODE_AM=2  MODE_CW=3
-	dsp_setvox(band_vars[band][HMI_S_VOX]);
+//BD	dsp_settxmod(band_vars[band][HMI_S_TXMOD]);
 	dsp_setagc(band_vars[band][HMI_S_AGC]);	
 	relay_setattn(hmi_pre[band_vars[band][HMI_S_PRE]]);
 	relay_setband(hmi_bpf[band_vars[band][HMI_S_BPF]]);
@@ -470,15 +366,6 @@ void hmi_handler(uint8_t event)
 {
   static uint8_t hmi_menu_last = HMI_S_BPF;    //last menu when <escape>, used to come back to the same menu
 
-
-    if ((event==HMI_PTT_ON) && (ptt_internal_active == false))  //if internal is taking the ptt control, not from mike, ignores mike
-    {
-      ptt_external_active = true;
-    }
-    else if (event==HMI_PTT_OFF)   
-    {
-      ptt_external_active = false;
-    }
 
 	/* Special case for TUNE state */
 	if (hmi_menu == HMI_S_TUNE)  //on main tune
@@ -557,9 +444,9 @@ void hmi_handler(uint8_t event)
   		else if (event==HMI_E_DECREMENT)
   			hmi_menu_opt_display = (hmi_menu_opt_display>0)?hmi_menu_opt_display-1:0;
   		break;
-  	case HMI_S_VOX:
+  	case HMI_S_TXMOD:
   		if (event==HMI_E_INCREMENT)
-  			hmi_menu_opt_display = (hmi_menu_opt_display<HMI_NUM_OPT_VOX-1)?hmi_menu_opt_display+1:HMI_NUM_OPT_VOX-1;
+  			hmi_menu_opt_display = (hmi_menu_opt_display<HMI_NUM_OPT_TXMOD-1)?hmi_menu_opt_display+1:HMI_NUM_OPT_TXMOD-1;
   		else if (event==HMI_E_DECREMENT)
   			hmi_menu_opt_display = (hmi_menu_opt_display>0)?hmi_menu_opt_display-1:0;
   		break;
@@ -617,12 +504,6 @@ void hmi_handler(uint8_t event)
       else
       {
   		  band_vars[hmi_band][hmi_menu] = hmi_menu_opt_display;				// Store selected option	
-/*
-        if((hmi_menu == HMI_S_VOX) && (hmi_menu_opt_display == NoVOX_pos_menu))  //if switching to NoVOX
-        {
-          gpio_set_dir(GP_PTT, false);          // PTT pin input
-        }
-*/
       }
   	}
   	else if (event==HMI_E_ESCAPE)
@@ -870,10 +751,10 @@ void hmi_evaluate(void)   //hmi loop
     display_fft_graf_top();  //scale freqs, mode changes the triangle
     band_vars_old[HMI_S_MODE] = band_vars[hmi_band][HMI_S_MODE];
   }
-  if(band_vars_old[HMI_S_VOX] != band_vars[hmi_band][HMI_S_VOX])
+  if(band_vars_old[HMI_S_TXMOD] != band_vars[hmi_band][HMI_S_TXMOD])
   {
-    dsp_setvox(band_vars[hmi_band][HMI_S_VOX]);
-    band_vars_old[HMI_S_VOX] = band_vars[hmi_band][HMI_S_VOX];
+//BD    dsp_settxmod(band_vars[hmi_band][HMI_S_TXMOD]);
+    band_vars_old[HMI_S_TXMOD] = band_vars[hmi_band][HMI_S_TXMOD];
   }
   if(band_vars_old[HMI_S_AGC] != band_vars[hmi_band][HMI_S_AGC])
   {
@@ -918,48 +799,24 @@ void hmi_evaluate(void)   //hmi loop
 
 
 
-  //T or R  (using letters instead of arrow used on original project)
-  if(tx_enable_old != tx_enabled)
-  {
-    if(tx_enabled == true)
-    {
-      sprintf(s, "T   ");
-      tft_writexy_(2, TFT_RED, TFT_BLACK, 0,2,(uint8_t *)s);
-    }
-    else
-    {
-      sprintf(s, "R");
-      tft_writexy_(2, TFT_GREEN, TFT_BLACK, 0,2,(uint8_t *)s);
-
-      sprintf(s, "x");
-      tft_writexy_plus(1, TFT_GREEN, TFT_BLACK, 4, 9, 3, 5, (uint8_t *)s);
-    }
-    agc_gain_old = agc_gain+1;
-
-    tx_enable_old = tx_enabled;
-  }
-
   
    
   //Smeter rec level
-  if(tx_enabled == false)
+  if(agc_gain_old != agc_gain)
   {
-    if(agc_gain_old != agc_gain)
-    {
-      rec_level = AGC_GAIN_MAX - agc_gain;
-      sprintf(s, "%d", rec_level);
-      tft_writexy_(2, TFT_GREEN, TFT_BLACK, 1,2,(uint8_t *)s);
-      agc_gain_old = agc_gain;
-    }
-    
-    if(fft_gain_old != fft_gain)
-    {
-      sprintf(s, "%d  ",fft_gain);
-      s[3]=0;
-      tft_writexy_plus(1, TFT_GREEN, TFT_BLACK, 5, 9, 3, 5, (uint8_t *)s);   
-      fft_gain_old = fft_gain;
-    }       
+    rec_level = AGC_GAIN_MAX - agc_gain;
+    sprintf(s, "%d", rec_level);
+    tft_writexy_(2, TFT_GREEN, TFT_BLACK, 1,2,(uint8_t *)s);
+    agc_gain_old = agc_gain;
   }
+  
+  if(fft_gain_old != fft_gain)
+  {
+    sprintf(s, "%d  ",fft_gain);
+    s[3]=0;
+    tft_writexy_plus(1, TFT_GREEN, TFT_BLACK, 5, 9, 3, 5, (uint8_t *)s);   
+    fft_gain_old = fft_gain;
+  }       
 
 
   // if menu changed, print new value
@@ -976,7 +833,7 @@ void hmi_evaluate(void)   //hmi loop
   	switch (hmi_menu)
   	{
   	case HMI_S_TUNE:
-  		sprintf(s, "%s   %s   %s        ", hmi_o_vox[band_vars[hmi_band][HMI_S_VOX]], hmi_o_agc[band_vars[hmi_band][HMI_S_AGC]], hmi_o_pre[band_vars[hmi_band][HMI_S_PRE]]);
+  		sprintf(s, "%s   %s   %s        ", hmi_o_txmod[band_vars[hmi_band][HMI_S_TXMOD]], hmi_o_agc[band_vars[hmi_band][HMI_S_AGC]], hmi_o_pre[band_vars[hmi_band][HMI_S_PRE]]);
       tft_writexy_(1, TFT_BLUE, TFT_BLACK,0,0,(uint8_t *)s);  
       //cursor
       tft_cursor_plus(3, TFT_YELLOW, 2+(hmi_menu_opt_display>2?hmi_menu_opt_display+1:hmi_menu_opt_display), 0, 2, 20);    
@@ -993,8 +850,8 @@ void hmi_evaluate(void)   //hmi loop
   		sprintf(s, "Set Pre: %s        ", hmi_o_pre[hmi_menu_opt_display]);
       tft_writexy_(1, TFT_MAGENTA, TFT_BLACK,0,0,(uint8_t *)s);  
   		break;
-  	case HMI_S_VOX:
-  		sprintf(s, "Set VOX: %s        ", hmi_o_vox[hmi_menu_opt_display]);
+  	case HMI_S_TXMOD:
+  		sprintf(s, "Set TXMOD: %s        ", hmi_o_txmod[hmi_menu_opt_display]);
       tft_writexy_(1, TFT_MAGENTA, TFT_BLACK,0,0,(uint8_t *)s);  
   		break;
   	case HMI_S_BPF:
@@ -1021,16 +878,13 @@ void hmi_evaluate(void)   //hmi loop
 
 
 
-  if (tx_enabled == false)  //waterfall only during RX
+  if (fft_display_graf_new == 1)    //design a new graphic only when a new line is ready from FFT
   {
-    if (fft_display_graf_new == 1)    //design a new graphic only when a new line is ready from FFT
-    {
-      //plot waterfall graphic     
-      display_fft_graf();  // warefall 110ms
+    //plot waterfall graphic     
+    display_fft_graf();  // warefall 110ms
 
-      fft_display_graf_new = 0;  
-      fft_samples_ready = 2;  //ready to start new sample collect
-    }
+    fft_display_graf_new = 0;  
+    fft_samples_ready = 2;  //ready to start new sample collect
   }
 
 
@@ -1043,7 +897,4 @@ void hmi_evaluate(void)   //hmi loop
     aud_samples_state = AUD_STATE_SAMP_IN;  
   }
 
-
-
-  Audio_Rec_Play();  //check for audio rec play function
 }

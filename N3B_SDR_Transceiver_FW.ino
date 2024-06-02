@@ -39,7 +39,7 @@ void setup() {
   hmi_init0();     //it could take some time to read all DFLASH data
 
   // // some delay required for Serial to open
-   while((millis() - tim) < 500)   //try for 5s to connect to serial
+   while((millis() - tim) < 1000)   //try for 5s to connect to serial
   {
     gpio_set_mask(1<<LED_BUILTIN);
     delay(50);                       // wait
