@@ -105,6 +105,9 @@ int main()
 	gpio_put(PICO_DEFAULT_LED_PIN, true);									// Set LED on
 	add_repeating_timer_ms(-LED_MS/10, led_callback, NULL, &led_timer);
 
+	gpio_init(GP_LNA);
+	gpio_set_dir(GP_LNA, GPIO_OUT);
+	gpio_put(GP_LNA, true);									// Enable LNA
 
 	/* Initialize the SW units */
 	mon_init();																// Monitor shell on stdio

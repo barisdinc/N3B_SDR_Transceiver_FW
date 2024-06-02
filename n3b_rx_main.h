@@ -26,7 +26,8 @@
 #define GP_AUX_2				8											// Pin 11: Left move
 #define GP_AUX_3				9											// Pin 12: Right move
 #define GP_PTT					15											// Pin 20: PTT line (low is active)
-#define DAC_Q					20											// Pin 26: PWM DAC Q channel
+#define GP_LNA                  20
+#define DAC_Q					16											// Pin 26: PWM DAC Q channel
 #define DAC_I					21											// Pin 27: PWM DAC I channel
 #define DAC_A					22											// Pin 29: PWM DAC Audio channel
 #define ADC_Q					26											// Pin 31: ADC 0
