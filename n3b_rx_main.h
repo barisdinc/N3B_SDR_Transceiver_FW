@@ -30,8 +30,8 @@
 #define DAC_Q					16											// Pin 26: PWM DAC Q channel
 #define DAC_I					21											// Pin 27: PWM DAC I channel
 #define DAC_A					22											// Pin 29: PWM DAC Audio channel
-#define ADC_Q					26											// Pin 31: ADC 0
-#define ADC_I					27											// Pin 32: ADC 1
+#define ADC_Q					27											// Pin 31: ADC 1
+#define ADC_I					26											// Pin 32: ADC 0
 #define ADC_A					28											// Pin 34: ADC 2
 
 
