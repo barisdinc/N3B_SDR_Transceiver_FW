@@ -354,8 +354,8 @@ bool __not_in_flash_func(dsp_callback)(repeating_timer_t *t)
 	if (tx_enabled)
 	{								
 		A_buf[dsp_active][dsp_tick] = (int16_t)(tx_agc*adc_result[2]);		// Copy A sample to A buffer
-		pwm_set_gpio_level(DAC_I, I_buf[dsp_active][dsp_tick] + DAC_BIAS);	// Output I to DAC
-		pwm_set_gpio_level(DAC_Q, Q_buf[dsp_active][dsp_tick] + DAC_BIAS);	// Output Q to DAC
+		pwm_set_gpio_level(DAC_I, I_buf[dsp_active][dsp_tick] + DAC_BIAS+I_shft);	// Output I to DAC
+		pwm_set_gpio_level(DAC_Q, Q_buf[dsp_active][dsp_tick] + DAC_BIAS+Q_shft);	// Output Q to DAC
 	}
 	else
 	{

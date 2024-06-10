@@ -75,6 +75,26 @@ void mon_flash(void)
 {
 	reset_usb_boot(1<<PICO_DEFAULT_LED_PIN,0);
 }
+void inc_i(void)
+{
+	I_shft += 10;
+	printf("I = %d \n", I_shft);
+}
+void inc_q(void)
+{
+	Q_shft += 10;
+	printf("Q = %d \n", Q_shft);
+}
+void dec_i(void)
+{
+	I_shft -= 10;
+	printf("I = %d \n", I_shft);
+}
+void dec_q(void)
+{
+	Q_shft -= 10;
+	printf("Q = %d \n", Q_shft);
+}
 
 /* 
  * Dumps a defined range of Si5351 registers 
@@ -232,7 +252,7 @@ void mon_adc(void)
 /*
  * Command shell table, organize the command functions above
  */
-#define NCMD	9
+#define NCMD	13
 shell_t shell[NCMD]=
 {
 	{"flash", 5, &mon_flash, "flash", "Reboots into USB bootloader mode"},
@@ -243,7 +263,11 @@ shell_t shell[NCMD]=
 	{"pt",  2, &mon_pt,  "pt (no parameters)", "Toggles PTT status"},
 	{"bp",  2, &mon_bp,  "bp {r|w} <value>", "Read or Write BPF relays"},
 	{"rx",  2, &mon_rx,  "rx {r|w} <value>", "Read or Write RX relays"},
-	{"adc", 3, &mon_adc, "adc (no parameters)", "Dump latest ADC readouts"}
+	{"adc", 3, &mon_adc, "adc (no parameters)", "Dump latest ADC readouts"},
+	{"i+", 3, &inc_i, "increase i shift", ""},
+	{"i-", 3, &dec_i, "decrease i shift", ""},
+	{"q+", 3, &inc_q, "increase q shift", ""},
+	{"q-", 3, &dec_q, "decrease q shift)", ""}
 };
 
 

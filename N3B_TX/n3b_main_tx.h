@@ -13,7 +13,7 @@
 
 /* Set this to 1 when FFT engine must be used */
 
-#define DSP_FFT					0
+#define DSP_FFT					1
 
 
 /* GPIO (pin) assignments */
@@ -73,5 +73,9 @@ int i2c_get_data(i2c_inst_t *i2c, uint8_t addr, uint8_t *dst, size_t len, bool n
 #define LCD_TYPE			LCD_8574_GEN										// Active selection
 
 #define FREQ_TX_BASE        2399500000 //base frequency is 2.4 GHz, e.g display shows 777 -> 2400.277
+
+
+static int8_t I_shft = 0;
+static int8_t Q_shft = 0;
 
 #endif

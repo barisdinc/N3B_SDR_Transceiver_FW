@@ -362,44 +362,44 @@ bool __not_in_flash_func(tx)(void)
 		}
 		break;
 	case MODE_LSB:
-		// Bandpass Audio, LSB only
-		dsp_bandpass(BIN_100, BIN_3000, -1);
-		// Shift LSB up to Fc
-		for (i=1; i<BIN_3000; i++)
-		{
-			XI_buf[BIN_FC-i] = XI_buf[FFT_SIZE-i];
-			XQ_buf[BIN_FC-i] = XQ_buf[FFT_SIZE-i];
-			XI_buf[FFT_SIZE-i] = 0;
-			XQ_buf[FFT_SIZE-i] = 0;
-		}
-		for (i=1; i<BIN_3000; i++)
-		{
-			XI_buf[FFT_SIZE-BIN_FC+i] = XI_buf[BIN_FC-i];
-			XQ_buf[FFT_SIZE-BIN_FC+i] = XQ_buf[BIN_FC-i];
-		}
+		// // Bandpass Audio, LSB only
+		// dsp_bandpass(BIN_100, BIN_3000, -1);
+		// // Shift LSB up to Fc
+		// for (i=1; i<BIN_3000; i++)
+		// {
+		// 	XI_buf[BIN_FC-i] = XI_buf[FFT_SIZE-i];
+		// 	XQ_buf[BIN_FC-i] = XQ_buf[FFT_SIZE-i];
+		// 	XI_buf[FFT_SIZE-i] = 0;
+		// 	XQ_buf[FFT_SIZE-i] = 0;
+		// }
+		// for (i=1; i<BIN_3000; i++)
+		// {
+		// 	XI_buf[FFT_SIZE-BIN_FC+i] = XI_buf[BIN_FC-i];
+		// 	XQ_buf[FFT_SIZE-BIN_FC+i] = XQ_buf[BIN_FC-i];
+		// }
 		break;
 	case MODE_AM:
-		// Bandpass Audio
-		dsp_bandpass(BIN_100, BIN_3000, 0);
-		// Shift DSB up to Fc
-		for (i=1; i<BIN_3000; i++)
-		{
-			XI_buf[BIN_FC+i] = XI_buf[i];
-			XQ_buf[BIN_FC+i] = XQ_buf[i];
-			XI_buf[i] = 0;	
-			XQ_buf[i] = 0;
-			XI_buf[BIN_FC-i] = XI_buf[FFT_SIZE-i];
-			XQ_buf[BIN_FC-i] = XQ_buf[FFT_SIZE-i];
-			XI_buf[FFT_SIZE-i] = 0;
-			XQ_buf[FFT_SIZE-i] = 0;
-		}
-		for (i=1; i<BIN_3000; i++)
-		{
-			XI_buf[FFT_SIZE-BIN_FC-i] = XI_buf[BIN_FC+i];
-			XQ_buf[FFT_SIZE-BIN_FC-i] = XQ_buf[BIN_FC+i];
-			XI_buf[FFT_SIZE-BIN_FC+i] = XI_buf[BIN_FC-i];
-			XQ_buf[FFT_SIZE-BIN_FC+i] = XQ_buf[BIN_FC-i];
-		}
+		// // Bandpass Audio
+		// dsp_bandpass(BIN_100, BIN_3000, 0);
+		// // Shift DSB up to Fc
+		// for (i=1; i<BIN_3000; i++)
+		// {
+		// 	XI_buf[BIN_FC+i] = XI_buf[i];
+		// 	XQ_buf[BIN_FC+i] = XQ_buf[i];
+		// 	XI_buf[i] = 0;	
+		// 	XQ_buf[i] = 0;
+		// 	XI_buf[BIN_FC-i] = XI_buf[FFT_SIZE-i];
+		// 	XQ_buf[BIN_FC-i] = XQ_buf[FFT_SIZE-i];
+		// 	XI_buf[FFT_SIZE-i] = 0;
+		// 	XQ_buf[FFT_SIZE-i] = 0;
+		// }
+		// for (i=1; i<BIN_3000; i++)
+		// {
+		// 	XI_buf[FFT_SIZE-BIN_FC-i] = XI_buf[BIN_FC+i];
+		// 	XQ_buf[FFT_SIZE-BIN_FC-i] = XQ_buf[BIN_FC+i];
+		// 	XI_buf[FFT_SIZE-BIN_FC+i] = XI_buf[BIN_FC-i];
+		// 	XQ_buf[FFT_SIZE-BIN_FC+i] = XQ_buf[BIN_FC-i];
+		// }
 		break;
 	case MODE_CW:
 
@@ -409,29 +409,29 @@ bool __not_in_flash_func(tx)(void)
 	}
 
 	
-	// /*** Execute inverse FFT ***/
-	// scale1 = fix_fft(&XI_buf[0], &XQ_buf[0], true);
+	/*** Execute inverse FFT ***/
+	scale1 = fix_fft(&XI_buf[0], &XQ_buf[0], true);
 
 
-	// /*** Export FFT buffer to I and Q ***/
-	// b = dsp_active;															// Assume active buffer not changed, i.e. no overruns
-	// if (++b > 2) b = 0;														// Point to oldest (will be next for output)
-	// qp = &Q_buf[b][0]; xqp = &XQ_buf[BUFSIZE];
-	// ip = &I_buf[b][0]; xip = &XI_buf[BUFSIZE];
-	// for (i=0; i<BUFSIZE; i++)
-	// {
-	// 	*qp++ = *xqp++;														// Copy newest results
-	// 	*ip++ = *xip++;														// Copy newest results
-	// }
+	/*** Export FFT buffer to I and Q ***/
+	b = dsp_active;															// Assume active buffer not changed, i.e. no overruns
+	if (++b > 2) b = 0;														// Point to oldest (will be next for output)
+	qp = &Q_buf[b][0]; xqp = &XQ_buf[BUFSIZE];
+	ip = &I_buf[b][0]; xip = &XI_buf[BUFSIZE];
+	for (i=0; i<BUFSIZE; i++)
+	{
+		*qp++ = *xqp++;														// Copy newest results
+		*ip++ = *xip++;														// Copy newest results
+	}
 
 
-	// /*** Scale down into DAC_RANGE! ***/	
-	// peak = 256;
-	// for (i=0; i<BUFSIZE; i++)									
-	// {
-	// 	Q_buf[b][i] /= peak;		
-	// 	I_buf[b][i] /= peak;
-	// }
+	/*** Scale down into DAC_RANGE! ***/	
+	peak = 256;
+	for (i=0; i<BUFSIZE; i++)									
+	{
+		Q_buf[b][i] /= peak;		
+		I_buf[b][i] /= peak;
+	}
 
 	return true;
 }
