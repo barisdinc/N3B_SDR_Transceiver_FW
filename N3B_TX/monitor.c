@@ -59,7 +59,7 @@ void mon_init()
 	printf("             \n");
 	printf(" ATOLYE 2024 \n");
 	printf("=============\n");
-	printf("Pico> ");								// prompt
+	printf("N3B_TX> ");								// prompt
 }
 
 
@@ -328,7 +328,7 @@ void mon_evaluate(void)
 		if (i>0)									// something to parse?
 			mon_parse(mon_cmd);						// --> process command
 		i=0;										// reset index
-		printf("Pico> ");							// prompt
+		printf("N3B_TX> ");							// prompt
 		break;
 	case LF:
 		break;										// Ignore, assume CR as terminator

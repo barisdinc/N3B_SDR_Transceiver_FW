@@ -28,6 +28,7 @@
 #include "dsp.h"
 #include "adf4360.h"
 #include "monitor.h"
+#include "i2c_slave.h"
 
 
 
@@ -102,6 +103,9 @@ int main()
 	gpio_init(GPIO_14);
 	gpio_set_dir(GPIO_14, GPIO_OUT);
 	gpio_put(GPIO_14, false);
+
+
+	n3b_i2c_slave_init(); // Initialize the I2C0 communciation channel between TX and RX pico mcus in slave mode
 
 	i2c_init(i2c1, 100000);													// i2c1 initialisation at 100Khz
 	gpio_set_function(I2C1_SDA, GPIO_FUNC_I2C);

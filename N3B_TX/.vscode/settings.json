@@ -3,6 +3,7 @@
         "pwm.h": "c",
         "bus_ctrl.h": "c",
         "timer.h": "c",
-        "stdlib.h": "c"
+        "stdlib.h": "c",
+        "i2c_slave.h": "c"
     }
 }

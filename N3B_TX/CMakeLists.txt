@@ -29,7 +29,7 @@ pico_sdk_init()
 # fix_fft.c	The FFT transformations in fixed point format
 # hmi.c		All user interaction, controlling freq, modulation, levels, etc
 # monitor.c	A tty shell on a serial interface
-add_executable(N3B_TX n3b_main_tx.c lcd.c adf4360.c dsp.c fix_fft.c hmi.c monitor.c)
+add_executable(N3B_TX n3b_main_tx.c lcd.c adf4360.c dsp.c fix_fft.c hmi.c monitor.c i2c_slave.c)
 
 # target_compile_options(N3B_TX PRIVATE -Wall)
 pico_set_program_name(N3B_TX "N3B_TX")

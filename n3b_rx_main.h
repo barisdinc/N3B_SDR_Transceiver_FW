@@ -1,5 +1,5 @@
-#ifndef __N3B_H__
-#define __N3B_H__
+#ifndef __N3B_RX_MAIN_H__
+#define __N3B_RX_MAINH__
 /* 
  * N3B.h
  *
@@ -27,12 +27,15 @@
 #define GP_AUX_3				9											// Pin 12: Right move
 #define GP_PTT					15											// Pin 20: PTT line (low is active)
 #define GP_LNA                  20
-#define DAC_Q					16											// Pin 26: PWM DAC Q channel
+#define DAC_Q					19											// Pin 26: PWM DAC Q channel
 #define DAC_I					21											// Pin 27: PWM DAC I channel
 #define DAC_A					22											// Pin 29: PWM DAC Audio channel
-#define ADC_Q					27											// Pin 31: ADC 1
-#define ADC_I					26											// Pin 32: ADC 0
+#define ADC_Q					26											// Pin 31: ADC 1
+#define ADC_I					27											// Pin 32: ADC 0
 #define ADC_A					28											// Pin 34: ADC 2
+#define MASTER_I2C0_SDA			16											// Pin 21: I2C channel 0 - data - communication to TX PICO
+#define MASTER_I2C0_SCL			17											// Pin 22: I2C channel 0 - clock - communication to TX PICO
+
 
 
 
@@ -44,7 +47,6 @@
 
 int16_t* get_fft_buffer_address(void);
 bool is_fft_completed();
-
 
 
 #endif

@@ -25,8 +25,8 @@
 #define GP_AUX_2				8											// Pin 11: Left move
 #define GP_AUX_3				9											// Pin 12: Right move
 #define GP_PTT					15											// Pin 20: PTT line (low is active)
-#define I2C0_SDA				16											// Pin 21: I2C channel 0 - data
-#define I2C0_SCL				17											// Pin 22: I2C channel 0 - clock
+#define SLAVE_I2C0_SDA			16											// Pin 21: I2C channel 0 - data
+#define SLAVE_I2C0_SCL			17											// Pin 22: I2C channel 0 - clock
 #define I2C1_SDA				18											// Pin 24: I2C channel 1 - data
 #define I2C1_SCL				19											// Pin 25: I2C channel 1 - clock
 #define DAC_Q					20											// Pin 26: PWM DAC Q channel
