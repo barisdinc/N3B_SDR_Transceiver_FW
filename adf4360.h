@@ -42,7 +42,8 @@ extern vfo_t vfo[1];	// vfo[0] is for RX and vfo[1] is TX, which is on TX board
 
 
 void adf4360_init(void);
-void adf4360_evaluate(uint32_t freq);
+// void adf4360_evaluate(uint32_t freq);
+void adf4360_evaluate(double freq);
 
 #define FREQ_RX_MAX 999990
 #define FREQ_RX_MIN 500000
