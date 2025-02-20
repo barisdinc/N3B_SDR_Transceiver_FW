@@ -8,14 +8,14 @@
 // #include "vco.h"
 // #include "fft_filter.h"
 // #include "utils.h"
-// #include "usb_audio_device.h"
-// #include "ring_buffer_lib.h"
+#include "usb_audio_device.h"
+#include "ring_buffer_lib.h"
 // #include "adf4360.h"
 
 //ring buffer for USB data
 #define USB_BUF_SIZE (sizeof(int16_t) * 2 * (1 + (adc_block_size/decimation_rate)))
-// static ring_buffer_t usb_ring_buffer;
-// static uint8_t usb_buf[USB_BUF_SIZE];
+static ring_buffer_t usb_ring_buffer;
+static uint8_t usb_buf[USB_BUF_SIZE];
 
 //buffers and dma for ADC
 int receiver::adc_dma_ping;
@@ -29,13 +29,13 @@ uint16_t receiver::pong_samples[adc_block_size];
 // int receiver::audio_pwm_slice_num;
 // int receiver::pwm_dma_ping;
 // int receiver::pwm_dma_pong;
-// dma_channel_config receiver::audio_ping_cfg;
-// dma_channel_config receiver::audio_pong_cfg;
-// int16_t receiver::ping_audio[adc_block_size];
-// int16_t receiver::pong_audio[adc_block_size];
-// bool receiver::audio_running;
-// uint16_t receiver::num_ping_samples;
-// uint16_t receiver::num_pong_samples;
+dma_channel_config receiver::audio_ping_cfg;
+dma_channel_config receiver::audio_pong_cfg;
+int16_t receiver::ping_audio[adc_block_size];
+int16_t receiver::pong_audio[adc_block_size];
+bool receiver::audio_running;
+uint16_t receiver::num_ping_samples;
+uint16_t receiver::num_pong_samples;
 
 //dma for capture
 int receiver::capture_dma;
@@ -235,7 +235,7 @@ receiver::receiver(rx_settings & settings_to_apply, rx_status & status) : settin
     // //BARIS offset = pio_add_program(pio, &nco_program);
     // //BARIS sm = pio_claim_unused_sm(pio, true);
     // //BARIS nco_program_init(pio, sm, offset);
-    // ring_buffer_init(&usb_ring_buffer, usb_buf, USB_BUF_SIZE, 1);
+    ring_buffer_init(&usb_ring_buffer, usb_buf, USB_BUF_SIZE, 1);
 
     //configure SMPS into power save mode
     const uint PSU_PIN = 23;
@@ -323,114 +323,110 @@ receiver::receiver(rx_settings & settings_to_apply, rx_status & status) : settin
 
 }
 
-// static bool __not_in_flash_func(usb_callback)(repeating_timer_t *rt)
-// {
-// //   usb_audio_device_task();
-// //   return true; // keep repeating
-// }
+static bool __not_in_flash_func(usb_callback)(repeating_timer_t *rt)
+{
+  usb_audio_device_task();
+  return true; // keep repeating
+}
 
 void receiver::set_alarm_pool(alarm_pool_t *p)
 {
   pool = p;
 }
 
-// critical_section_t usb_volumute;
-// static int16_t usb_volume=180;  // usb volume
-// static bool usb_mute = false;   // usb mute control
+critical_section_t usb_volumute;
+static int16_t usb_volume=180;  // usb volume
+static bool usb_mute = false;   // usb mute control
 
 // usb mute setting = true is muted
-// static void on_usb_set_mutevol(bool mute, int16_t vol)
-// {
-//   //printf ("usbcb: got mute %d vol %d\n", mute, vol);
-//   critical_section_enter_blocking(&usb_volumute);
-//   usb_volume = vol + 90; // defined as -90 to 90 => 0 to 180
-//   usb_mute = mute;
-//   critical_section_exit(&usb_volumute);
-// }
+static void on_usb_set_mutevol(bool mute, int16_t vol)
+{
+  //printf ("usbcb: got mute %d vol %d\n", mute, vol);
+  critical_section_enter_blocking(&usb_volumute);
+  usb_volume = vol + 90; // defined as -90 to 90 => 0 to 180
+  usb_mute = mute;
+  critical_section_exit(&usb_volumute);
+}
 
-// static void on_usb_audio_tx_ready()
-// {
-//   uint8_t usb_buf[SAMPLE_BUFFER_SIZE * sizeof(int16_t)] = {0};
+static void on_usb_audio_tx_ready()
+{
+  uint8_t usb_buf[SAMPLE_BUFFER_SIZE * sizeof(int16_t)] = {0};
 
-//   // Callback from TinyUSB library when all data is ready
-//   // to be transmitted.
-//   //
-//   // Write local buffer to the USB microphone
-//   ring_buffer_pop(&usb_ring_buffer, usb_buf, sizeof(usb_buf));
-//   usb_audio_device_write(usb_buf, sizeof(usb_buf));
-// }
+  // Callback from TinyUSB library when all data is ready
+  // to be transmitted.
+  //
+  // Write local buffer to the USB microphone
+  ring_buffer_pop(&usb_ring_buffer, usb_buf, sizeof(usb_buf));
+  usb_audio_device_write(usb_buf, sizeof(usb_buf));
+}
 
 
-// uint16_t __not_in_flash_func(receiver::process_block)(uint16_t adc_samples[], int16_t pwm_audio[])
-// {
-//   //capture usb volume and mute settings
-//   critical_section_enter_blocking(&usb_volumute);
-//   int32_t safe_usb_volume = usb_volume;
-//   bool safe_usb_mute = usb_mute;
-//   critical_section_exit(&usb_volumute);
+uint16_t __not_in_flash_func(receiver::process_block)(uint16_t adc_samples[], int16_t pwm_audio[])
+{
+  //capture usb volume and mute settings
+  critical_section_enter_blocking(&usb_volumute);
+  int32_t safe_usb_volume = usb_volume;
+  bool safe_usb_mute = usb_mute;
+  critical_section_exit(&usb_volumute);
 
-//   //process adc IQ samples to produce raw audio
-//   int16_t usb_audio[adc_block_size/decimation_rate];
-//   uint16_t num_samples = rx_dsp_inst.process_block(adc_samples, usb_audio);
+  //process adc IQ samples to produce raw audio
+  int16_t usb_audio[adc_block_size/decimation_rate];
+  uint16_t num_samples = receiver_dsp_inst.process_block(adc_samples, usb_audio);
   
-//   //post process audio for USB and PWM
-//   uint16_t odx = 0;
-//   for(uint16_t idx=0; idx<num_samples; ++idx)
-//   {
-//     int16_t audio = usb_audio[idx];
+  //post process audio for USB and PWM
+  uint16_t odx = 0;
+  for(uint16_t idx=0; idx<num_samples; ++idx)
+  {
+    int16_t audio = usb_audio[idx];
 
-//     //digital volume control
-//     audio = ((int32_t)audio * gain_numerator) >> 8;
+    //digital volume control
+    audio = ((int32_t)audio * gain_numerator) >> 8;
 
-//     //convert to unsigned value in range 0 to 500 to output to PWM
-//     audio += INT16_MAX;
-//     audio = (uint16_t)audio/pwm_scale;
+    //convert to unsigned value in range 0 to 500 to output to PWM
+    audio += INT16_MAX;
+    audio = (uint16_t)audio/pwm_scale;
 
-//     //interpolate to PWM rate
-//     static int16_t last_audio = 0;
-//     int32_t comb = audio - last_audio;
-//     last_audio = audio;
-//     for(uint8_t subsample = 0; subsample < interpolation_rate; ++subsample)
-//     {
-//       static int32_t integrator = 0;
-//       integrator += comb;
-//       pwm_audio[odx++] = integrator >> 4;
-//     }
+    //interpolate to PWM rate
+    static int16_t last_audio = 0;
+    int32_t comb = audio - last_audio;
+    last_audio = audio;
+    for(uint8_t subsample = 0; subsample < interpolation_rate; ++subsample)
+    {
+      static int32_t integrator = 0;
+      integrator += comb;
+      pwm_audio[odx++] = integrator >> 4;
+    }
 
-//     //usb audio volume is controlled from usb
-//     if (safe_usb_mute) {
-//       usb_audio[idx] = 0;
-//     } else {
-//       usb_audio[idx] = (usb_audio[idx] * safe_usb_volume)/180;
-//     }
-//   }
+    //usb audio volume is controlled from usb
+    if (safe_usb_mute) {
+      usb_audio[idx] = 0;
+    } else {
+      usb_audio[idx] = (usb_audio[idx] * safe_usb_volume)/180;
+    }
+  }
 
-//   //add usb audio to ring buffer
-//   ring_buffer_push_ovr(&usb_ring_buffer, (uint8_t *)usb_audio, sizeof(int16_t) * num_samples); 
-//   return num_samples * interpolation_rate;
-// }
+  //add usb audio to ring buffer
+  ring_buffer_push_ovr(&usb_ring_buffer, (uint8_t *)usb_audio, sizeof(int16_t) * num_samples); 
+  return num_samples * interpolation_rate;
+}
 
 void receiver::run()
 {
-  printf("L1\r\n");
-  sleep_ms(1000);
-    // usb_audio_device_init();
-    // critical_section_init(&usb_volumute);
-    // usb_audio_device_set_tx_ready_handler(on_usb_audio_tx_ready);
-    // usb_audio_device_set_mutevol_handler(on_usb_set_mutevol);
-    // repeating_timer_t usb_timer;
-    // hard_assert(pool);
+    usb_audio_device_init();
+    critical_section_init(&usb_volumute);
+    usb_audio_device_set_tx_ready_handler(on_usb_audio_tx_ready);
+    usb_audio_device_set_mutevol_handler(on_usb_set_mutevol);
+    repeating_timer_t usb_timer;
+    hard_assert(pool);
 
     // here the delay theoretically should be 1067 (1ms = 1 / (15000 / 16))
     // however the 'usb_microphone_task' should be called more often, but not too often
     // to save compute
-    // bool ret = alarm_pool_add_repeating_timer_us(pool, 1067 / 2, usb_callback, NULL, &usb_timer);
-    // hard_assert(ret);
+    bool ret = alarm_pool_add_repeating_timer_us(pool, 1067 / 2, usb_callback, NULL, &usb_timer);
+    hard_assert(ret);
 
     while(true)
     {
-      printf("L2\r\n");
-      sleep_ms(1000);
       if (settings_changed)
       {
         apply_settings();

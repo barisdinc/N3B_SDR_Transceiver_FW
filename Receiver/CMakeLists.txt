@@ -38,7 +38,6 @@ add_compile_options(-Wall -Werror -fdata-sections -ffunction-sections)
 add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)
 add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>)
 
-
 project(n3b_rx)
 pico_sdk_init()
 
@@ -73,9 +72,9 @@ if(PICO_BOARD STREQUAL "pico")
       # waterfall.cpp
       # button.cpp
       # cat.cpp
-      # usb_descriptors.c
-      # usb_audio_device.c
-      # ring_buffer_lib.c
+      usb_descriptors.c
+      usb_audio_device.c
+      ring_buffer_lib.c
       # adf4360.cpp
   )
 
@@ -86,9 +85,7 @@ if(PICO_BOARD STREQUAL "pico")
   pico_enable_stdio_usb(n3b_rx 1)
   pico_enable_stdio_uart(n3b_rx 0)
   target_include_directories(n3b_rx PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-  target_link_libraries(n3b_rx 
-                              # PRIVATE 
-                                       pico_stdlib
+  target_link_libraries(n3b_rx PRIVATE pico_stdlib
                                        pico_multicore
                                        hardware_clocks
                                        hardware_flash
@@ -148,16 +145,6 @@ elseif(PICO_BOARD STREQUAL "pico2")
                                          u8g2)
     target_compile_definitions(pico2rx-riscv PUBLIC PICO_XOSC_STARTUP_DELAY_MULTIPLIER=128)
 
-    #battery check utility
-    project(battery_check_pico2-riscv)
-    add_executable(battery_check_pico2-riscv
-        battery_check.cpp
-    )
-    pico_add_extra_outputs(battery_check_pico2-riscv)
-    pico_enable_stdio_usb(battery_check_pico2-riscv 1)
-    pico_enable_stdio_uart(battery_check_pico2-riscv 0)
-    target_link_libraries(battery_check_pico2-riscv pico_stdlib hardware_adc)
-
   else()
 
     #main application
@@ -200,16 +187,6 @@ elseif(PICO_BOARD STREQUAL "pico2")
                                         #  tinyusb_board
                                          u8g2)
     target_compile_definitions(pico2rx PUBLIC PICO_XOSC_STARTUP_DELAY_MULTIPLIER=128)
-
-    #battery check utility
-    project(battery_check_pico2)
-    add_executable(battery_check_pico2
-        battery_check.cpp
-    )
-    pico_add_extra_outputs(battery_check_pico2)
-    pico_enable_stdio_usb(battery_check_pico2 1)
-    pico_enable_stdio_uart(battery_check_pico2 0)
-    target_link_libraries(battery_check_pico2 pico_stdlib hardware_adc)
 
   endif()
 

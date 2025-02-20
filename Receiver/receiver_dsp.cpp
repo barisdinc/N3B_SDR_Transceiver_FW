@@ -1,7 +1,7 @@
 #include "receiver_dsp.h"
 #include "receiver_definitions.h"
 // #include "fft_filter.h"
-// #include "utils.h"
+#include "utils.h"
 #include "pico/stdlib.h"
 // #include "cic_corrections.h"
 
@@ -87,69 +87,69 @@ void inline receiver_dsp :: iq_imbalance_correction(int16_t &i, int16_t &q)
     // }
 }
 
-// uint16_t __not_in_flash_func(receiver_dsp :: process_block)(uint16_t samples[], int16_t audio_samples[])
-// {
+uint16_t __not_in_flash_func(receiver_dsp :: process_block)(uint16_t samples[], int16_t audio_samples[])
+{
 
-//   uint16_t decimated_index = 0;
-//   int32_t magnitude_sum = 0;
-//   int16_t real[adc_block_size/cic_decimation_rate];
-//   int16_t imag[adc_block_size/cic_decimation_rate];
+  uint16_t decimated_index = 0;
+  int32_t magnitude_sum = 0;
+  int16_t real[adc_block_size/cic_decimation_rate];
+  int16_t imag[adc_block_size/cic_decimation_rate];
 
-//   for(uint16_t idx=0; idx<adc_block_size; idx++)
-//   {
-//       //convert to signed representation
-//       const int16_t raw_sample = samples[idx];
+  for(uint16_t idx=0; idx<adc_block_size; idx++)
+  {
+      //convert to signed representation
+      const int16_t raw_sample = samples[idx];
 
-//       //work out which samples are i and q
-//       int16_t i = ((idx&1)^1^swap_iq)*raw_sample;//even samples contain i data
-//       int16_t q = ((idx&1)^swap_iq)*raw_sample;//odd samples contain q data
+      //work out which samples are i and q
+      int16_t i = ((idx&1)^1^swap_iq)*raw_sample;//even samples contain i data
+      int16_t q = ((idx&1)^swap_iq)*raw_sample;//odd samples contain q data
 
-//       //reduce sample rate by a factor of 16
-//       if(decimate(i, q))
-//       {
+      //reduce sample rate by a factor of 16
+      if(decimate(i, q))
+      {
 
-//         static uint32_t iq_count = 0;
-//         static int32_t i_accumulator = 0;
-//         static int32_t q_accumulator = 0;
-//         static int16_t i_avg = 0;
-//         static int16_t q_avg = 0;
-//         i_accumulator += i;
-//         q_accumulator += q;
-//         if (++iq_count == 2048) //power of 2 avoids division
-//         {
-//           i_avg = i_accumulator / 2048;
-//           q_avg = q_accumulator / 2048;
-//           i_accumulator = 0;
-//           q_accumulator = 0;
-//           iq_count = 0;
-//         }
-//         i -= i_avg;
-//         q -= q_avg;
+        static uint32_t iq_count = 0;
+        static int32_t i_accumulator = 0;
+        static int32_t q_accumulator = 0;
+        static int16_t i_avg = 0;
+        static int16_t q_avg = 0;
+        i_accumulator += i;
+        q_accumulator += q;
+        if (++iq_count == 2048) //power of 2 avoids division
+        {
+          i_avg = i_accumulator / 2048;
+          q_avg = q_accumulator / 2048;
+          i_accumulator = 0;
+          q_accumulator = 0;
+          iq_count = 0;
+        }
+        i -= i_avg;
+        q -= q_avg;
 
-//         iq_imbalance_correction(i, q);
+        iq_imbalance_correction(i, q);
 
-//         //Apply frequency shift (move tuned frequency to DC)
-//         frequency_shift(i, q);
+        //Apply frequency shift (move tuned frequency to DC)
+        frequency_shift(i, q);
 
-//         #ifdef MEASURE_DC_BIAS 
-//         static int64_t bias_measurement = 0; 
-//         static int32_t num_bias_measurements = 0; 
-//         if(num_bias_measurements == 100000) { 
-//           printf("DC BIAS x 100 %lli\n", bias_measurement/1000); 
-//           num_bias_measurements = 0; 
-//           bias_measurement = 0; 
-//         } 
-//         else { 
-//           num_bias_measurements++; 
-//           bias_measurement += i; 
-//         } 
-//         #endif 
+        #ifdef MEASURE_DC_BIAS 
+        static int64_t bias_measurement = 0; 
+        static int32_t num_bias_measurements = 0; 
+        if(num_bias_measurements == 100000) { 
+          printf("DC BIAS x 100 %lli\n", bias_measurement/1000); 
+          num_bias_measurements = 0; 
+          bias_measurement = 0; 
+        } 
+        else { 
+          num_bias_measurements++; 
+          bias_measurement += i; 
+        } 
+        #endif 
 
-//         real[decimated_index] = i;
-//         imag[decimated_index] = q;
-//         ++decimated_index;
-//       }
-//   }
+        real[decimated_index] = i;
+        imag[decimated_index] = q;
+        ++decimated_index;
+      }
+  }
 
 //   //fft filter decimates a further 2x
 //   //if the capture buffer isn't in use, fill it
@@ -158,39 +158,39 @@ void inline receiver_dsp :: iq_imbalance_correction(int16_t &i, int16_t &q)
 //   fft_filter_inst.process_sample(real, imag, filter_control, capture);
 //   if(filter_control.capture) sem_release(&spectrum_semaphore);
 
-//   for(uint16_t idx=0; idx<adc_block_size/decimation_rate; idx++)
-//   {
-//     int16_t i = real[idx];
-//     int16_t q = imag[idx];
+  for(uint16_t idx=0; idx<adc_block_size/decimation_rate; idx++)
+  {
+    int16_t i = 0;//BD real[idx];
+    int16_t q = 0;//BD imag[idx];
 
-//     //Measure amplitude (for signal strength indicator)
-//     int32_t amplitude = rectangular_2_magnitude(i, q);
-//     magnitude_sum += amplitude;
+    //Measure amplitude (for signal strength indicator)
+    int32_t amplitude = rectangular_2_magnitude(i, q);
+    magnitude_sum += amplitude;
 
-//     //Demodulate to give audio sample
-//     int32_t audio = demodulate(i, q);
+    //Demodulate to give audio sample
+    int32_t audio = demodulate(i, q);
 
-//     //De-emphasis
-//     audio = apply_deemphasis(audio);
+    //De-emphasis
+    audio = apply_deemphasis(audio);
 
-//     //Automatic gain control scales signal to use full 16 bit range
-//     //e.g. -32767 to 32767
-//     audio = automatic_gain_control(audio);
+    //Automatic gain control scales signal to use full 16 bit range
+    //e.g. -32767 to 32767
+    audio = automatic_gain_control(audio);
 
-//     //squelch
-//     if(signal_amplitude < squelch_threshold) {
-//       audio = 0;
-//     }
+    //squelch
+    if(signal_amplitude < squelch_threshold) {
+      audio = 0;
+    }
 
-//     //output raw audio
-//     audio_samples[idx] = audio;
-//   }
+    //output raw audio
+    audio_samples[idx] = audio;
+  }
 
-//   //average over the number of samples
-//   signal_amplitude = (magnitude_sum * decimation_rate)/adc_block_size;
+  //average over the number of samples
+  signal_amplitude = (magnitude_sum * decimation_rate)/adc_block_size;
 
-//   return adc_block_size/decimation_rate;
-// }
+  return adc_block_size/decimation_rate;
+}
 
 void __not_in_flash_func(receiver_dsp :: frequency_shift)(int16_t &i, int16_t &q)
 {
@@ -209,8 +209,8 @@ void __not_in_flash_func(receiver_dsp :: frequency_shift)(int16_t &i, int16_t &q
     // q = q_shifted;
 }
 
-// bool __not_in_flash_func(receiver_dsp :: decimate)(int16_t &i, int16_t &q)
-// {
+bool __not_in_flash_func(receiver_dsp :: decimate)(int16_t &i, int16_t &q)
+{
 
     //   //CIC decimation filter
     //   //implement integrator stages
@@ -253,8 +253,8 @@ void __not_in_flash_func(receiver_dsp :: frequency_shift)(int16_t &i, int16_t &q
     //     return true;
     //   }
 
-    //   return false;
-// }
+      return false;
+}
 
 #define AMSYNC_ALPHA (3398)
 #define AMSYNC_BETA (1898)
@@ -262,191 +262,191 @@ void __not_in_flash_func(receiver_dsp :: frequency_shift)(int16_t &i, int16_t &q
 #define AMSYNC_F_MAX (218)
 #define AMSYNC_FIX_MAX (32767)
 
-// int16_t __not_in_flash_func(receiver_dsp :: demodulate)(int16_t i, int16_t q)
-// {
-//    static int32_t phi_locked = 0;
-//    static int32_t freq_locked = 0;
+int16_t __not_in_flash_func(receiver_dsp :: demodulate)(int16_t i, int16_t q)
+{
+   static int32_t phi_locked = 0;
+   static int32_t freq_locked = 0;
 
-//     if(mode == AM)
-//     {
-//         int16_t amplitude = rectangular_2_magnitude(i, q);
-//         //measure DC using first order IIR low-pass filter
-//         audio_dc = amplitude+(audio_dc - (audio_dc >> 5));
-//         //subtract DC component
-//         return amplitude - (audio_dc >> 5);
-//     }
-//     else if(mode == AMSYNC)
-//     {
-//       size_t idx;
+    if(mode == AM)
+    {
+        int16_t amplitude = rectangular_2_magnitude(i, q);
+        //measure DC using first order IIR low-pass filter
+        audio_dc = amplitude+(audio_dc - (audio_dc >> 5));
+        //subtract DC component
+        return amplitude - (audio_dc >> 5);
+    }
+    else if(mode == AMSYNC)
+    {
+      size_t idx;
 
-//       if (phi_locked < 0)
-//       {
-//         idx = AMSYNC_FIX_MAX + 1 + phi_locked;
-//       }
-//       else
-//       {
-//         idx = phi_locked;
-//       }
+      if (phi_locked < 0)
+      {
+        idx = AMSYNC_FIX_MAX + 1 + phi_locked;
+      }
+      else
+      {
+        idx = phi_locked;
+      }
 
-//       // VCO
-//       const int16_t vco_i = sin_table[((idx >> 4) + 512u) & 0x7ffu];
-//       const int16_t vco_q = sin_table[(idx >> 4) & 0x7ffu];
+      // VCO
+      const int16_t vco_i = sin_table[((idx >> 4) + 512u) & 0x7ffu];
+      const int16_t vco_q = sin_table[(idx >> 4) & 0x7ffu];
 
-//       // Phase Detector
-//       const int16_t synced_i = (i * vco_i + q * vco_q) >> 15;
-//       const int16_t synced_q = (-i * vco_q + q * vco_i) >> 15;
-//       int16_t err = -rectangular_2_phase(synced_i, synced_q);
+      // Phase Detector
+      const int16_t synced_i = (i * vco_i + q * vco_q) >> 15;
+      const int16_t synced_q = (-i * vco_q + q * vco_i) >> 15;
+      int16_t err = -rectangular_2_phase(synced_i, synced_q);
 
-//       // Loop filter
-//       freq_locked += (((int32_t)AMSYNC_BETA * err) >> 15);
-//       phi_locked += freq_locked + (((int32_t)AMSYNC_ALPHA * err) >> 15);
+      // Loop filter
+      freq_locked += (((int32_t)AMSYNC_BETA * err) >> 15);
+      phi_locked += freq_locked + (((int32_t)AMSYNC_ALPHA * err) >> 15);
 
-//       // Clamp frequency
-//       if (freq_locked > AMSYNC_F_MAX)
-//       {
-//         freq_locked = AMSYNC_F_MAX;
-//       }
+      // Clamp frequency
+      if (freq_locked > AMSYNC_F_MAX)
+      {
+        freq_locked = AMSYNC_F_MAX;
+      }
 
-//       if (freq_locked < AMSYNC_F_MIN)
-//       {
-//         freq_locked = AMSYNC_F_MIN;
-//       }
+      if (freq_locked < AMSYNC_F_MIN)
+      {
+        freq_locked = AMSYNC_F_MIN;
+      }
 
-//       // Wrap phi
-//       if (phi_locked > AMSYNC_FIX_MAX)
-//       {
-//         phi_locked -= AMSYNC_FIX_MAX + 1;
-//       }
+      // Wrap phi
+      if (phi_locked > AMSYNC_FIX_MAX)
+      {
+        phi_locked -= AMSYNC_FIX_MAX + 1;
+      }
 
-//       if (phi_locked < -AMSYNC_FIX_MAX)
-//       {
-//         phi_locked += AMSYNC_FIX_MAX + 1;
-//       }
+      if (phi_locked < -AMSYNC_FIX_MAX)
+      {
+        phi_locked += AMSYNC_FIX_MAX + 1;
+      }
 
-//       // measure DC using first order IIR low-pass filter
-//       audio_dc = synced_q + (audio_dc - (audio_dc >> 5));
-//       // subtract DC component
-//       return synced_q - (audio_dc >> 5);
-//     }
-//     else if(mode == FM)
-//     {
-//         int16_t phase = rectangular_2_phase(i, q);
-//         int16_t frequency = phase - last_phase;
-//         last_phase = phase;
+      // measure DC using first order IIR low-pass filter
+      audio_dc = synced_q + (audio_dc - (audio_dc >> 5));
+      // subtract DC component
+      return synced_q - (audio_dc >> 5);
+    }
+    else if(mode == FM)
+    {
+        int16_t phase = rectangular_2_phase(i, q);
+        int16_t frequency = phase - last_phase;
+        last_phase = phase;
 
-//         return frequency;
-//     }
-//     else if(mode == LSB || mode == USB)
-//     {
-//         return i;
-//     }
-//     else //if(mode==cw)
-//     {
-//       cw_sidetone_phase += cw_sidetone_frequency_Hz * 2048 * decimation_rate / adc_sample_rate;
-//       const int16_t rotation_i =  sin_table[(cw_sidetone_phase + 512u) & 0x7ffu];
-//       const int16_t rotation_q = -sin_table[cw_sidetone_phase & 0x7ffu];
-//       return ((i * rotation_i) - (q * rotation_q)) >> 15;
-//     }
-// }
+        return frequency;
+    }
+    else if(mode == LSB || mode == USB)
+    {
+        return i;
+    }
+    else //if(mode==cw)
+    {
+      cw_sidetone_phase += cw_sidetone_frequency_Hz * 2048 * decimation_rate / adc_sample_rate;
+      const int16_t rotation_i =  sin_table[(cw_sidetone_phase + 512u) & 0x7ffu];
+      const int16_t rotation_q = -sin_table[cw_sidetone_phase & 0x7ffu];
+      return ((i * rotation_i) - (q * rotation_q)) >> 15;
+    }
+}
 
-// int16_t __not_in_flash_func(receiver_dsp::automatic_gain_control)(int16_t audio_in)
-// {
-    // //Use a leaky max hold to estimate audio power
-    // //             _
-    // //            | |
-    // //            | |
-    // //    audio __| |_____________________
-    // //            | |
-    // //            |_|
-    // //
-    // //                _____________
-    // //               /             \_
-    // //    max_hold  /                \_
-    // //           _ /                   \_
-    // //              ^                ^
-    // //            attack             |
-    // //                <---hang--->   |
-    // //                             decay
+int16_t __not_in_flash_func(receiver_dsp::automatic_gain_control)(int16_t audio_in)
+{
+    //Use a leaky max hold to estimate audio power
+    //             _
+    //            | |
+    //            | |
+    //    audio __| |_____________________
+    //            | |
+    //            |_|
+    //
+    //                _____________
+    //               /             \_
+    //    max_hold  /                \_
+    //           _ /                   \_
+    //              ^                ^
+    //            attack             |
+    //                <---hang--->   |
+    //                             decay
 
-    // // Attack is fast so that AGC reacts fast to increases in power
-    // // Hang time and decay are relatively slow to prevent rapid gain changes
+    // Attack is fast so that AGC reacts fast to increases in power
+    // Hang time and decay are relatively slow to prevent rapid gain changes
 
-    // static const uint8_t extra_bits = 16;
-    // int32_t audio = audio_in;
-    // const int32_t audio_scaled = audio << extra_bits;
-    // if(audio_scaled > max_hold)
-    // {
-    //   //attack
-    //   max_hold += (audio_scaled - max_hold) >> attack_factor;
-    //   hang_timer = hang_time;
-    // }
-    // else if(hang_timer)
-    // {
-    //   //hang
-    //   hang_timer--;
-    // }
-    // else if(max_hold > 0)
-    // {
-    //   //decay
-    //   max_hold -= max_hold>>decay_factor; 
-    // }
+    static const uint8_t extra_bits = 16;
+    int32_t audio = audio_in;
+    const int32_t audio_scaled = audio << extra_bits;
+    if(audio_scaled > max_hold)
+    {
+      //attack
+      max_hold += (audio_scaled - max_hold) >> attack_factor;
+      hang_timer = hang_time;
+    }
+    else if(hang_timer)
+    {
+      //hang
+      hang_timer--;
+    }
+    else if(max_hold > 0)
+    {
+      //decay
+      max_hold -= max_hold>>decay_factor; 
+    }
 
-    // //calculate gain needed to amplify to full scale
-    // const int16_t magnitude = max_hold >> extra_bits;
-    // const int16_t limit = INT16_MAX; //hard limit
-    // const int16_t setpoint = limit/2; //about half full scale
+    //calculate gain needed to amplify to full scale
+    const int16_t magnitude = max_hold >> extra_bits;
+    const int16_t limit = INT16_MAX; //hard limit
+    const int16_t setpoint = limit/2; //about half full scale
 
-    // //apply gain
-    // if(magnitude > 0)
-    // {
-    //   if(manual_gain_control)
-    //   {
-    //     gain = manual_gain;
-    //   }
-    //   else
-    //   {
-    //     gain = setpoint/magnitude;
-    //   }
-    //   if(gain < 1) gain = 1;
-    //   audio *= gain;
-    // }
+    //apply gain
+    if(magnitude > 0)
+    {
+      if(manual_gain_control)
+      {
+        gain = manual_gain;
+      }
+      else
+      {
+        gain = setpoint/magnitude;
+      }
+      if(gain < 1) gain = 1;
+      audio *= gain;
+    }
 
-    // //soft clip (compress)
-    // if (audio > setpoint)  audio =  setpoint + ((audio-setpoint)>>1);
-    // if (audio < -setpoint) audio = -setpoint - ((audio+setpoint)>>1);
+    //soft clip (compress)
+    if (audio > setpoint)  audio =  setpoint + ((audio-setpoint)>>1);
+    if (audio < -setpoint) audio = -setpoint - ((audio+setpoint)>>1);
 
-    // //hard clamp
-    // if (audio > limit)  audio = limit;
-    // if (audio < -limit) audio = -limit;
+    //hard clamp
+    if (audio > limit)  audio = limit;
+    if (audio < -limit) audio = -limit;
 
-    // return audio;
-// }
+    return audio;
+}
 
 receiver_dsp :: receiver_dsp()
 {
-//   //initialise state
-//   phase = 0;
-//   frequency=0;
+  //initialise state
+  phase = 0;
+  frequency=0;
 //   initialise_luts();
-//   swap_iq = 0;
-//   iq_correction = 0;
+  swap_iq = 0;
+  iq_correction = 0;
 
-//   //initialise semaphore for spectrum
-//   set_mode(AM, 2);
-//   sem_init(&spectrum_semaphore, 1, 1);
-//   set_agc_speed(3);
+  //initialise semaphore for spectrum
+  set_mode(AM, 2);
+  sem_init(&spectrum_semaphore, 1, 1);
+  set_agc_speed(3);
 //   filter_control.enable_auto_notch = false;
 
-//   //clear cic filter
-//   decimate_count=0;
-//   integratori1=0; integratorq1=0;
-//   integratori2=0; integratorq2=0;
-//   integratori3=0; integratorq3=0;
-//   integratori4=0; integratorq4=0;
-//   delayi0=0; delayq0=0;
-//   delayi1=0; delayq1=0;
-//   delayi2=0; delayq2=0;
-//   delayi3=0; delayq3=0;
+  //clear cic filter
+  decimate_count=0;
+  integratori1=0; integratorq1=0;
+  integratori2=0; integratorq2=0;
+  integratori3=0; integratorq3=0;
+  integratori4=0; integratorq4=0;
+  delayi0=0; delayq0=0;
+  delayi1=0; delayq1=0;
+  delayi2=0; delayq2=0;
+  delayi3=0; delayq3=0;
 }
 
 void receiver_dsp :: set_auto_notch(bool enable_auto_notch)
@@ -559,34 +559,34 @@ void receiver_dsp :: set_gain_cal_dB(uint16_t val)
 //set_squelch
 void receiver_dsp :: set_squelch(uint8_t val)
 {
-//   //0-9 = s0 to s9, 10 to 12 = S9+10dB to S9+30dB
-//   const int16_t thresholds[] = {
-//     (int16_t)(s9_threshold>>9), //s0
-//     (int16_t)(s9_threshold>>8), //s1
-//     (int16_t)(s9_threshold>>7), //s2
-//     (int16_t)(s9_threshold>>6), //s3
-//     (int16_t)(s9_threshold>>5), //s4
-//     (int16_t)(s9_threshold>>4), //s5
-//     (int16_t)(s9_threshold>>3), //s6
-//     (int16_t)(s9_threshold>>2), //s7
-//     (int16_t)(s9_threshold>>1), //s8
-//     (int16_t)(s9_threshold),    //s9
-//     (int16_t)(s9_threshold*3),  //s9+10dB
-//     (int16_t)(s9_threshold*10), //s9+20dB
-//     (int16_t)(s9_threshold*31), //s9+30dB
-//   };
-//   squelch_threshold = thresholds[val];
+  //0-9 = s0 to s9, 10 to 12 = S9+10dB to S9+30dB
+  const int16_t thresholds[] = {
+    (int16_t)(s9_threshold>>9), //s0
+    (int16_t)(s9_threshold>>8), //s1
+    (int16_t)(s9_threshold>>7), //s2
+    (int16_t)(s9_threshold>>6), //s3
+    (int16_t)(s9_threshold>>5), //s4
+    (int16_t)(s9_threshold>>4), //s5
+    (int16_t)(s9_threshold>>3), //s6
+    (int16_t)(s9_threshold>>2), //s7
+    (int16_t)(s9_threshold>>1), //s8
+    (int16_t)(s9_threshold),    //s9
+    (int16_t)(s9_threshold*3),  //s9+10dB
+    (int16_t)(s9_threshold*10), //s9+20dB
+    (int16_t)(s9_threshold*31), //s9+30dB
+  };
+  squelch_threshold = thresholds[val];
 }
 
-// int16_t receiver_dsp :: get_signal_strength_dBm()
-// {
-//   if(signal_amplitude == 0)
-//   {
-//     return -130;
-//   }
-//   const float signal_strength_dBFS = 20.0*log10f((float)signal_amplitude / full_scale_signal_strength);
-//   return roundf(full_scale_dBm - amplifier_gain_dB + signal_strength_dBFS);
-// }
+int16_t receiver_dsp :: get_signal_strength_dBm()
+{
+  if(signal_amplitude == 0)
+  {
+    return -130;
+  }
+  const float signal_strength_dBFS = 20.0*log10f((float)signal_amplitude / full_scale_signal_strength);
+  return roundf(full_scale_dBm - amplifier_gain_dB + signal_strength_dBFS);
+}
 
 // s_filter_control receiver_dsp :: get_filter_config()
 // {
@@ -603,15 +603,15 @@ void receiver_dsp :: set_squelch(uint8_t val)
 //   return std::min(adjusted_magnitude, (uint32_t)UINT16_MAX);
 // }
 
-// static inline int8_t freq_bin(uint8_t bin)
-// {
-//   return bin > 127 ? bin - 256 : bin;
-// }
+static inline int8_t freq_bin(uint8_t bin)
+{
+  return bin > 127 ? bin - 256 : bin;
+}
 
-// static inline uint8_t fft_shift(uint8_t bin)
-// {
-//   return bin ^ 0x80;
-// }
+static inline uint8_t fft_shift(uint8_t bin)
+{
+  return bin ^ 0x80;
+}
 
 void receiver_dsp :: get_spectrum(uint8_t spectrum[], uint8_t &dB10)
 {
