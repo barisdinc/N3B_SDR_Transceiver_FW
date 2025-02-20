@@ -39,30 +39,31 @@ add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)
 add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>)
 
 
-project(picorx)
+project(n3b_rx)
 pico_sdk_init()
 
-file(GLOB U8G2_SRCS
-     "external/u8g2/csrc/*.c"
-)
+# file(GLOB U8G2_SRCS
+#      "external/u8g2/csrc/*.c"
+# )
 
-include_directories(include external/u8g2/csrc/)
+# include_directories(include external/u8g2/csrc/)
 
-add_library(
-    u8g2
-    ${U8G2_SRCS}
-)
-target_compile_options(u8g2 PRIVATE -Wno-unused-function -Wno-unused-variable)
+# add_library(
+#     u8g2
+#     ${U8G2_SRCS}
+# )
+# target_compile_options(u8g2 PRIVATE -Wno-unused-function -Wno-unused-variable)
 
 if(PICO_BOARD STREQUAL "pico")
 
   #main application
-  add_executable(main
+  add_executable(n3b_rx
+      main.cpp
       # ssd1306.c
       # picorx.cpp
       # vco.c
-      # rx.cpp
-      # rx_dsp.cpp
+      receiver.cpp
+      receiver_dsp.cpp
       # fft.cpp
       # fft_filter.cpp
       # cic_corrections.cpp
@@ -79,13 +80,15 @@ if(PICO_BOARD STREQUAL "pico")
   )
 
   # pico_generate_pio_header(picorx ${CMAKE_CURRENT_LIST_DIR}/nco.pio)
-  pico_generate_pio_header(picorx ${CMAKE_CURRENT_LIST_DIR}/quadrature_encoder.pio)
-  pico_add_extra_outputs(picorx)
+  # pico_generate_pio_header(picorx ${CMAKE_CURRENT_LIST_DIR}/quadrature_encoder.pio)
+  pico_add_extra_outputs(n3b_rx)
   # enable usb output, disable uart output
-  pico_enable_stdio_usb(picorx 1)
-  pico_enable_stdio_uart(picorx 0)
-  target_include_directories(picorx PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-  target_link_libraries(picorx PRIVATE pico_stdlib
+  pico_enable_stdio_usb(n3b_rx 1)
+  pico_enable_stdio_uart(n3b_rx 0)
+  target_include_directories(n3b_rx PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+  target_link_libraries(n3b_rx 
+                              # PRIVATE 
+                                       pico_stdlib
                                        pico_multicore
                                        hardware_clocks
                                        hardware_flash
@@ -97,24 +100,12 @@ if(PICO_BOARD STREQUAL "pico")
                                        hardware_spi
                                        tinyusb_device
                                        tinyusb_board
-                                       u8g2)
-  target_compile_definitions(picorx PUBLIC PICO_XOSC_STARTUP_DELAY_MULTIPLIER=128)
-
-  #battery check utility
-  project(battery_check)
-  add_executable(battery_check
-      battery_check.cpp
-  )
-  pico_add_extra_outputs(battery_check)
-  pico_enable_stdio_usb(battery_check 1)
-  pico_enable_stdio_uart(battery_check 0)
-  target_link_libraries(battery_check pico_stdlib hardware_adc)
+                                      #  u8g2
+                                       )
+  target_compile_definitions(n3b_rx PUBLIC PICO_XOSC_STARTUP_DELAY_MULTIPLIER=128)
 
 elseif(PICO_BOARD STREQUAL "pico2")
-
-
   if(PICO_PLATFORM STREQUAL "rp2350-riscv")
-
     #main application
     add_executable(pico2rx-riscv
       # ssd1306.c
@@ -152,8 +143,8 @@ elseif(PICO_BOARD STREQUAL "pico2")
                                          hardware_dma 
                                          hardware_i2c
                                          hardware_spi
-                                         tinyusb_device
-                                         tinyusb_board
+                                        #  tinyusb_device
+                                        #  tinyusb_board
                                          u8g2)
     target_compile_definitions(pico2rx-riscv PUBLIC PICO_XOSC_STARTUP_DELAY_MULTIPLIER=128)
 
@@ -205,8 +196,8 @@ elseif(PICO_BOARD STREQUAL "pico2")
                                          hardware_dma 
                                          hardware_i2c
                                          hardware_spi
-                                         tinyusb_device
-                                         tinyusb_board
+                                        #  tinyusb_device
+                                        #  tinyusb_board
                                          u8g2)
     target_compile_definitions(pico2rx PUBLIC PICO_XOSC_STARTUP_DELAY_MULTIPLIER=128)
 

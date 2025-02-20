@@ -1,5 +1,5 @@
-#ifndef RX__
-#define RX__
+#ifndef RECEIVER_H
+#define RECEIVER_H
 
 #include <stdio.h>
 #include <math.h>
@@ -13,8 +13,8 @@
 #include "hardware/pwm.h"
 #include "hardware/dma.h"
 
-#include "rx_definitions.h"
-#include "rx_dsp.h"
+#include "receiver_definitions.h"
+#include "receiver_dsp.h"
 
 struct rx_settings
 {
@@ -46,13 +46,11 @@ struct rx_status
 {
   int32_t signal_strength_dBm;
   uint32_t busy_time;
-  uint16_t temp;
-  uint16_t battery;
-  s_filter_control filter_config;
+//   s_filter_control filter_config;
   uint8_t usb_buf_level;
 };
 
-class rx
+class receiver
 {
   private:
 
@@ -113,14 +111,14 @@ class rx
   int16_t gain_numerator=0;
 
   public:
-  rx(rx_settings & settings_to_apply, rx_status & status);
+  receiver(rx_settings & settings_to_apply, rx_status & status);
   void apply_settings();
   void run();
   void get_spectrum(uint8_t spectrum[], uint8_t &dB10);
   void set_alarm_pool(alarm_pool_t *p);
   rx_settings &settings_to_apply;
   rx_status &status;
-  rx_dsp rx_dsp_inst;
+  receiver_dsp receiver_dsp_inst;
   void read_batt_temp();
   void access(bool settings_changed);
   void release();

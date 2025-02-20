@@ -4,7 +4,7 @@
 #include "pico/multicore.h"
 #include "pico/time.h"
 
-// #include "rx.h"
+#include "receiver.h"
 // #include "ui.h"
 // #include "waterfall.h"
 // #include "adf4360.h"
@@ -14,28 +14,33 @@
 
 // uint8_t spectrum[256];
 // uint8_t dB10=10;
-// static rx_settings settings_to_apply;
-// static rx_status status;
-// static rx receiver(settings_to_apply, status);
+static rx_settings settings_to_apply;
+static rx_status status;
+static receiver rx(settings_to_apply, status);
 // waterfall waterfall_inst;
 // static ui user_interface(settings_to_apply, status, receiver, spectrum, dB10, waterfall_inst);
 
 void core1_main()
 {
     multicore_lockout_victim_init();
-    receiver.run();
+    for (uint8_t cnt=0;cnt<50;cnt++)
+    {
+      printf("Core 2 started \r\n");
+      sleep_ms(100);
+    }
+    rx.run();
 }
 
 int main() 
 {
   stdio_init_all();
-  // multicore_launch_core1(core1_main);
-  // stdio_init_all();
-
-// for (uint32_t tm=0;tm<=1000;tm++)
-// {
-//   printf("Basladik %lu\r\n", tm);
-// }
+  multicore_launch_core1(core1_main);
+  stdio_init_all();
+  for (uint8_t cnt=0;cnt<50;cnt++)
+  {
+    printf("Core 1 started \r\n");
+    sleep_ms(100);
+  }
   // create an alarm pool for USB streaming with highest priority (0), so
   // that it can pre-empt the default pool
   // receiver.set_alarm_pool(alarm_pool_create(0, 16));
@@ -48,7 +53,7 @@ int main()
   while(1)
   {
     //schedule tasks
-    // printf(".");
+  // printf(".");
 
   //   if(time_us_32() - last_ui_update > UI_REFRESH_US)
   //   {
@@ -64,5 +69,5 @@ int main()
 
   //   waterfall_inst.update_spectrum(receiver, settings_to_apply, status, spectrum, dB10);
 
-  // }
+  }
 }
