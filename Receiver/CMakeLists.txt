@@ -39,7 +39,7 @@ add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)
 add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>)
 
 
-project(picorx)
+project(N3B_rx)
 pico_sdk_init()
 
 file(GLOB U8G2_SRCS
@@ -57,9 +57,9 @@ target_compile_options(u8g2 PRIVATE -Wno-unused-function -Wno-unused-variable)
 if(PICO_BOARD STREQUAL "pico")
 
   #main application
-  add_executable(picorx
+  add_executable(N3B_rx
       ssd1306.c
-      picorx.cpp
+      main_rx.cpp
       vco.c
       rx.cpp
       rx_dsp.cpp
@@ -78,14 +78,14 @@ if(PICO_BOARD STREQUAL "pico")
       adf4360.cpp
   )
 
-  # pico_generate_pio_header(picorx ${CMAKE_CURRENT_LIST_DIR}/nco.pio)
-  pico_generate_pio_header(picorx ${CMAKE_CURRENT_LIST_DIR}/quadrature_encoder.pio)
-  pico_add_extra_outputs(picorx)
+  # pico_generate_pio_header(N3B_rx ${CMAKE_CURRENT_LIST_DIR}/nco.pio)
+  pico_generate_pio_header(N3B_rx ${CMAKE_CURRENT_LIST_DIR}/quadrature_encoder.pio)
+  pico_add_extra_outputs(N3B_rx)
   # enable usb output, disable uart output
-  pico_enable_stdio_usb(picorx 1)
-  pico_enable_stdio_uart(picorx 0)
-  target_include_directories(picorx PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-  target_link_libraries(picorx PRIVATE pico_stdlib
+  pico_enable_stdio_usb(N3B_rx 1)
+  pico_enable_stdio_uart(N3B_rx 0)
+  target_include_directories(N3B_rx PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+  target_link_libraries(N3B_rx PRIVATE pico_stdlib
                                        pico_multicore
                                        hardware_clocks
                                        hardware_flash
@@ -98,7 +98,7 @@ if(PICO_BOARD STREQUAL "pico")
                                        tinyusb_device
                                        tinyusb_board
                                        u8g2)
-  target_compile_definitions(picorx PUBLIC PICO_XOSC_STARTUP_DELAY_MULTIPLIER=128)
+  target_compile_definitions(N3B_rx PUBLIC PICO_XOSC_STARTUP_DELAY_MULTIPLIER=128)
 
   #battery check utility
   project(battery_check)
@@ -116,9 +116,9 @@ elseif(PICO_BOARD STREQUAL "pico2")
   if(PICO_PLATFORM STREQUAL "rp2350-riscv")
 
     #main application
-    add_executable(pico2rx-riscv
+    add_executable(N3B_rx-riscv
       ssd1306.c
-      picorx.cpp
+      main_rx.cpp
       vco.c
       rx.cpp
       rx_dsp.cpp
@@ -135,14 +135,14 @@ elseif(PICO_BOARD STREQUAL "pico2")
       usb_audio_device.c
       ring_buffer_lib.c
     )
-    # pico_generate_pio_header(pico2rx-riscv ${CMAKE_CURRENT_LIST_DIR}/nco.pio)
-    pico_generate_pio_header(pico2rx-riscv ${CMAKE_CURRENT_LIST_DIR}/quadrature_encoder.pio)
-    pico_add_extra_outputs(pico2rx-riscv)
+    # pico_generate_pio_header(N3B_rx-riscv ${CMAKE_CURRENT_LIST_DIR}/nco.pio)
+    pico_generate_pio_header(N3B_rx-riscv ${CMAKE_CURRENT_LIST_DIR}/quadrature_encoder.pio)
+    pico_add_extra_outputs(N3B_rx-riscv)
     # enable usb output, disable uart output
-    pico_enable_stdio_usb(pico2rx-riscv 1)
-    pico_enable_stdio_uart(pico2rx-riscv 0)
-    target_include_directories(pico2rx-riscv PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-    target_link_libraries(pico2rx-riscv PRIVATE pico_stdlib
+    pico_enable_stdio_usb(N3B_rx-riscv 1)
+    pico_enable_stdio_uart(N3B_rx-riscv 0)
+    target_include_directories(N3B_rx-riscv PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+    target_link_libraries(N3Brx-riscv PRIVATE pico_stdlib
                                          pico_multicore
                                          hardware_clocks
                                          hardware_flash
@@ -155,7 +155,7 @@ elseif(PICO_BOARD STREQUAL "pico2")
                                          tinyusb_device
                                          tinyusb_board
                                          u8g2)
-    target_compile_definitions(pico2rx-riscv PUBLIC PICO_XOSC_STARTUP_DELAY_MULTIPLIER=128)
+    target_compile_definitions(N3B_rx-riscv PUBLIC PICO_XOSC_STARTUP_DELAY_MULTIPLIER=128)
 
     #battery check utility
     project(battery_check_pico2-riscv)
@@ -170,9 +170,9 @@ elseif(PICO_BOARD STREQUAL "pico2")
   else()
 
     #main application
-    add_executable(pico2rx
+    add_executable(N3B_rx2
       ssd1306.c
-      picorx.cpp
+      main_rx.cpp
       vco.c
       rx.cpp
       rx_dsp.cpp
@@ -189,13 +189,13 @@ elseif(PICO_BOARD STREQUAL "pico2")
       usb_audio_device.c
       ring_buffer_lib.c
     )
-    # pico_generate_pio_header(pico2rx ${CMAKE_CURRENT_LIST_DIR}/nco.pio)
-    pico_generate_pio_header(pico2rx ${CMAKE_CURRENT_LIST_DIR}/quadrature_encoder.pio)
-    pico_add_extra_outputs(pico2rx)
-    pico_enable_stdio_usb(pico2rx 1)
-    pico_enable_stdio_uart(pico2rx 0)
-    target_include_directories(pico2rx PRIVATE ${CMAKE_CURRENT_LIST_DIR})
-    target_link_libraries(pico2rx PRIVATE pico_stdlib
+    # pico_generate_pio_header(N3B_rx2 ${CMAKE_CURRENT_LIST_DIR}/nco.pio)
+    pico_generate_pio_header(N3B_rx2 ${CMAKE_CURRENT_LIST_DIR}/quadrature_encoder.pio)
+    pico_add_extra_outputs(N3B_rx2)
+    pico_enable_stdio_usb(N3B_rx2 1)
+    pico_enable_stdio_uart(N3B_rx2 0)
+    target_include_directories(N3B_rx2 PRIVATE ${CMAKE_CURRENT_LIST_DIR})
+    target_link_libraries(N3B_rx2 PRIVATE pico_stdlib
                                          pico_multicore
                                          hardware_clocks
                                          hardware_flash
@@ -208,7 +208,7 @@ elseif(PICO_BOARD STREQUAL "pico2")
                                          tinyusb_device
                                          tinyusb_board
                                          u8g2)
-    target_compile_definitions(pico2rx PUBLIC PICO_XOSC_STARTUP_DELAY_MULTIPLIER=128)
+    target_compile_definitions(N3B_rx2 PUBLIC PICO_XOSC_STARTUP_DELAY_MULTIPLIER=128)
 
     #battery check utility
     project(battery_check_pico2)
