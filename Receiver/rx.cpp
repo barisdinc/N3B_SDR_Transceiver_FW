@@ -155,7 +155,7 @@ void rx::apply_settings()
 
       // uint32_t system_clock_rate;// = 130000000;
 //BARIS      nco_frequency_Hz = nco_set_frequency(pio, sm, tuned_frequency_Hz, system_clock_rate);
-      printf("FRQ: %lf\r\n",tuned_frequency_Hz);
+      // printf("FRQ: %lf\r\n",tuned_frequency_Hz);
       // adf4360_evaluate(777000);
       offset_frequency_Hz = tuned_frequency_Hz - nco_frequency_Hz;
 
@@ -388,6 +388,7 @@ void rx::read_batt_temp()
 
 static bool __not_in_flash_func(usb_callback)(repeating_timer_t *rt)
 {
+  // printf(".");
   usb_audio_device_task();
   return true; // keep repeating
 }
@@ -404,7 +405,7 @@ static bool usb_mute = false;   // usb mute control
 // usb mute setting = true is muted
 static void on_usb_set_mutevol(bool mute, int16_t vol)
 {
-  //printf ("usbcb: got mute %d vol %d\n", mute, vol);
+  // printf ("usbcb: got mute %d vol %d\n", mute, vol);
   critical_section_enter_blocking(&usb_volumute);
   usb_volume = vol + 90; // defined as -90 to 90 => 0 to 180
   usb_mute = mute;
@@ -414,6 +415,14 @@ static void on_usb_set_mutevol(bool mute, int16_t vol)
 static void on_usb_audio_tx_ready()
 {
   uint8_t usb_buf[SAMPLE_BUFFER_SIZE * sizeof(int16_t)] = {0};
+  // for (uint16_t cnt = 0 ; cnt < (SAMPLE_BUFFER_SIZE * sizeof(int16_t)) - 4; cnt+=4)
+  // {
+  //   usb_buf[cnt + 0] = 40;
+  //   usb_buf[cnt + 1] = 55;
+  //   usb_buf[cnt + 2] = 20;
+  //   usb_buf[cnt + 3] = 33;
+
+  // }
 
   // Callback from TinyUSB library when all data is ready
   // to be transmitted.
@@ -426,6 +435,7 @@ static void on_usb_audio_tx_ready()
 
 uint16_t __not_in_flash_func(rx::process_block)(uint16_t adc_samples[], int16_t pwm_audio[])
 {
+  // printf("X");
   //capture usb volume and mute settings
   critical_section_enter_blocking(&usb_volumute);
   int32_t safe_usb_volume = usb_volume;
@@ -475,6 +485,7 @@ uint16_t __not_in_flash_func(rx::process_block)(uint16_t adc_samples[], int16_t 
 
 void rx::run()
 {
+    // printf("Y");
     usb_audio_device_init();
     critical_section_init(&usb_volumute);
     usb_audio_device_set_tx_ready_handler(on_usb_audio_tx_ready);

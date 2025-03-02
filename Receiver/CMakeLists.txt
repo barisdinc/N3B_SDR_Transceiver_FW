@@ -82,8 +82,8 @@ if(PICO_BOARD STREQUAL "pico")
   pico_generate_pio_header(N3B_rx ${CMAKE_CURRENT_LIST_DIR}/quadrature_encoder.pio)
   pico_add_extra_outputs(N3B_rx)
   # enable usb output, disable uart output
-  pico_enable_stdio_usb(N3B_rx 1)
-  pico_enable_stdio_uart(N3B_rx 0)
+  pico_enable_stdio_usb(N3B_rx 0)
+  pico_enable_stdio_uart(N3B_rx 1)
   target_include_directories(N3B_rx PRIVATE ${CMAKE_CURRENT_LIST_DIR})
   target_link_libraries(N3B_rx PRIVATE pico_stdlib
                                        pico_multicore

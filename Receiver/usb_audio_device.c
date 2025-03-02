@@ -91,7 +91,7 @@ bool tud_audio_set_req_ep_cb(uint8_t rhport, tusb_control_request_t const * p_re
   uint8_t channelNum = TU_U16_LOW(p_request->wValue);
   uint8_t ctrlSel = TU_U16_HIGH(p_request->wValue);
   uint8_t ep = TU_U16_LOW(p_request->wIndex);
-
+  // printf("channel1 %d\r\n", channelNum);
   (void) channelNum; (void) ctrlSel; (void) ep;
 
   return false; 	// Yet not implemented
@@ -110,9 +110,9 @@ bool tud_audio_set_req_itf_cb(uint8_t rhport, tusb_control_request_t const * p_r
   uint8_t channelNum = TU_U16_LOW(p_request->wValue);
   uint8_t ctrlSel = TU_U16_HIGH(p_request->wValue);
   uint8_t itf = TU_U16_LOW(p_request->wIndex);
-
+  // printf("channel2 %d\r\n", channelNum);
   (void) channelNum; (void) ctrlSel; (void) itf;
-
+  
   return false; 	// Yet not implemented
 }
 
@@ -128,7 +128,7 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const * 
   uint8_t entityID = TU_U16_HIGH(p_request->wIndex);
 
   (void) itf;
-
+  // printf("channel3 %d\r\n", channelNum);
   // We do not support any set range requests here, only current value requests
   TU_VERIFY(p_request->bRequest == AUDIO_CS_REQ_CUR);
 
@@ -185,6 +185,7 @@ bool tud_audio_get_req_ep_cb(uint8_t rhport, tusb_control_request_t const * p_re
   uint8_t channelNum = TU_U16_LOW(p_request->wValue);
   uint8_t ctrlSel = TU_U16_HIGH(p_request->wValue);
   uint8_t ep = TU_U16_LOW(p_request->wIndex);
+  // printf("channel4 %d\r\n", channelNum);
 
   (void) channelNum; (void) ctrlSel; (void) ep;
 
@@ -202,6 +203,7 @@ bool tud_audio_get_req_itf_cb(uint8_t rhport, tusb_control_request_t const * p_r
   uint8_t channelNum = TU_U16_LOW(p_request->wValue);
   uint8_t ctrlSel = TU_U16_HIGH(p_request->wValue);
   uint8_t itf = TU_U16_LOW(p_request->wIndex);
+  // printf("channel5 %d\r\n", channelNum);
 
   (void) channelNum; (void) ctrlSel; (void) itf;
 
@@ -218,6 +220,7 @@ bool tud_audio_get_req_entity_cb(uint8_t rhport, tusb_control_request_t const * 
   uint8_t ctrlSel = TU_U16_HIGH(p_request->wValue);
   // uint8_t itf = TU_U16_LOW(p_request->wIndex); 			// Since we have only one audio function implemented, we do not need the itf value
   uint8_t entityID = TU_U16_HIGH(p_request->wIndex);
+  // printf("channel6 %d\r\n", channelNum);
 
   // Input terminal (Microphone input)
   if (entityID == 1)
@@ -325,6 +328,7 @@ bool tud_audio_tx_done_pre_load_cb(uint8_t rhport, uint8_t itf, uint8_t ep_in, u
   (void) itf;
   (void) ep_in;
   (void) cur_alt_setting;
+  // printf("test 1\r\n");
 
   if (usb_audio_device_tx_ready_handler)
   {
@@ -341,6 +345,7 @@ bool tud_audio_tx_done_post_load_cb(uint8_t rhport, uint16_t n_bytes_copied, uin
   (void) itf;
   (void) ep_in;
   (void) cur_alt_setting;
+  // printf("test 2\r\n");
 
   return true;
 }
@@ -349,6 +354,7 @@ bool tud_audio_set_itf_close_EP_cb(uint8_t rhport, tusb_control_request_t const 
 {
   (void) rhport;
   (void) p_request;
+  // printf("test 3\r\n");
 
   return true;
 }
