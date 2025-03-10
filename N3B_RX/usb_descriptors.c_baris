@@ -1,4 +1,4 @@
-/*
+/* 
  * The MIT License (MIT)
  *
  * Copyright (c) 2019 Ha Thach (tinyusb.org)
@@ -24,7 +24,7 @@
  */
 
 #include "tusb.h"
-
+#include "usb_descriptors.h"
 /* A combination of interfaces must have a unique product id, since PC will save device driver after the first plug.
  * Same VID/PID with different interface e.g MSC (first), then CDC (later) will possibly cause system error on PC.
  *
@@ -72,6 +72,8 @@ uint8_t const * tud_descriptor_device_cb(void)
 //--------------------------------------------------------------------+
 // Configuration Descriptor
 //--------------------------------------------------------------------+
+
+
 #define TUD_AUDIO_MIC_TWO_CH_DESCRIPTOR(_itfnum, _stridx, _nBytesPerSample, _nBitsUsedPerSample, _epin, _epsize) \
   /* Standard Interface Association Descriptor (IAD) */\
   TUD_AUDIO_DESC_IAD(/*_firstitfs*/ _itfnum, /*_nitfs*/ 0x02, /*_stridx*/ 0x00),\
@@ -98,39 +100,41 @@ uint8_t const * tud_descriptor_device_cb(void)
   /* Type I Format Type Descriptor(2.3.1.6 - Audio Formats) */\
   TUD_AUDIO_DESC_TYPE_I_FORMAT(_nBytesPerSample, _nBitsUsedPerSample),\
   /* Standard AS Isochronous Audio Data Endpoint Descriptor(4.10.1.1) */\
-  TUD_AUDIO_DESC_STD_AS_ISO_EP(/*_ep*/ _epin, /*_attr*/ (TUSB_XFER_ISOCHRONOUS | TUSB_ISO_EP_ATT_ASYNCHRONOUS | TUSB_ISO_EP_ATT_DATA), /*_maxEPsize*/ _epsize, /*_interval*/ TUD_OPT_HIGH_SPEED ? 0x04 : 0x01),\
+  TUD_AUDIO_DESC_STD_AS_ISO_EP(/*_ep*/ _epin, /*_attr*/ (uint8_t) ((uint8_t)TUSB_XFER_ISOCHRONOUS | (uint8_t)TUSB_ISO_EP_ATT_ASYNCHRONOUS | (uint8_t)TUSB_ISO_EP_ATT_DATA), /*_maxEPsize*/ _epsize, /*_interval*/ 0x01),\
   /* Class-Specific AS Isochronous Audio Data Endpoint Descriptor(4.10.1.2) */\
   TUD_AUDIO_DESC_CS_AS_ISO_EP(/*_attr*/ AUDIO_CS_AS_ISO_DATA_EP_ATT_NON_MAX_PACKETS_OK, /*_ctrl*/ AUDIO_CTRL_NONE, /*_lockdelayunit*/ AUDIO_CS_AS_ISO_DATA_EP_LOCK_DELAY_UNIT_UNDEFINED, /*_lockdelay*/ 0x0000)
+
 
 enum
 {
   ITF_NUM_AUDIO_CONTROL = 0,
   ITF_NUM_AUDIO_STREAMING,
+  ITF_NUM_CDC,
+  ITF_NUM_CDC_DATA,
   ITF_NUM_TOTAL
 };
 
-#define CONFIG_TOTAL_LEN    	(TUD_CONFIG_DESC_LEN + CFG_TUD_AUDIO * TUD_AUDIO_MIC_TWO_CH_DESC_LEN)
+// #define CONFIG_TOTAL_LEN    	(TUD_CONFIG_DESC_LEN + CFG_TUD_AUDIO * TUD_AUDIO_MIC_TWO_CH_DESC_LEN)
+//#define CONFIG_TOTAL_LEN    	(TUD_CONFIG_DESC_LEN + CFG_TUD_AUDIO * TUD_AUDIO_MIC_ONE_CH_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN)
+#define CONFIG_TOTAL_LEN    	(TUD_CONFIG_DESC_LEN + CFG_TUD_AUDIO * TUD_AUDIO_MIC_TWO_CH_DESC_LEN + CFG_TUD_CDC * TUD_CDC_DESC_LEN)
 
-#if TU_CHECK_MCU(OPT_MCU_LPC175X_6X, OPT_MCU_LPC177X_8X, OPT_MCU_LPC40XX)
-  // LPC 17xx and 40xx endpoint type (bulk/interrupt/iso) are fixed by its number
-  // 0 control, 1 In, 2 Bulk, 3 Iso, 4 In etc ...
-  #define EPNUM_AUDIO   0x03
-
-#elif TU_CHECK_MCU(OPT_MCU_NRF5X)
-  // nRF5x ISO can only be endpoint 8
-  #define EPNUM_AUDIO   0x08
-
-#else
-  #define EPNUM_AUDIO   0x01
-#endif
+#define EPNUM_AUDIO       0x01
+#define EPNUM_CDC_NOTIF   0x83
+#define EPNUM_CDC_OUT     0x04
+#define EPNUM_CDC_IN      0x84
 
 uint8_t const desc_configuration[] =
 {
-  // Interface count, string index, total length, attribute, power in mA
-  TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, 0x00, 100),
+    // Interface count, string index, total length, attribute, power in mA
+    TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, 0x00, 100),
 
-  // Interface number, string index, EP Out & EP In address, EP size
-  TUD_AUDIO_MIC_TWO_CH_DESCRIPTOR(/*_itfnum*/ ITF_NUM_AUDIO_CONTROL, /*_stridx*/ 0, /*_nBytesPerSample*/ CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_TX, /*_nBitsUsedPerSample*/ CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_TX*8, /*_epin*/ 0x80 | EPNUM_AUDIO, /*_epsize*/ CFG_TUD_AUDIO_EP_SZ_IN)
+    // Interface number, string index, EP Out & EP In address, EP size
+    // TUD_AUDIO_MIC_ONE_CH_DESCRIPTOR(            ITF_NUM_AUDIO_CONTROL,             0,                      CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_TX,                         CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_TX*8,           0x80 | EPNUM_AUDIO,             CFG_TUD_AUDIO_EP_SZ_IN),
+  //TUD_AUDIO_MIC_TWO_CH_DESCRIPTOR(            ITF_NUM_AUDIO_CONTROL,             0,                      CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_TX,                         CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_TX*8,           0x80 | EPNUM_AUDIO,             CFG_TUD_AUDIO_EP_SZ_IN),
+    TUD_AUDIO_MIC_TWO_CH_DESCRIPTOR(/*_itfnum*/ ITF_NUM_AUDIO_CONTROL, /*_stridx*/ 0, /*_nBytesPerSample*/ CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_TX, /*_nBitsUsedPerSample*/ CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_TX*8, /*_epin*/ 0x80 | EPNUM_AUDIO, /*_epsize*/ CFG_TUD_AUDIO_EP_SZ_IN),
+  
+    // CDC: Interface number, string index, EP notification address and size, EP data address (out, in) and size.
+    TUD_CDC_DESCRIPTOR(ITF_NUM_CDC, 6, EPNUM_CDC_NOTIF, 8, EPNUM_CDC_OUT, EPNUM_CDC_IN, 64)
 };
 
 // Invoked when received GET CONFIGURATION DESCRIPTOR
@@ -147,13 +151,14 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 //--------------------------------------------------------------------+
 
 // array of pointer to string descriptors
-char const* string_desc_arr [] =
+char const *string_desc_arr[] =
 {
-    (const char[]) { 0x09, 0x04 }, 	// 0: is supported language is English (0x0409)
-    "ATOLYE 2025",                 	// 1: Manufacturer
-    "N3B_RX_v1",      		          // 2: Product
-    "10489777",                      	// 3: Serials, should use chip ID
-    "UAC2",                     	 	// 4: Audio Interface
+        (const char[]){0x09, 0x04}, // 0: is supported language is English (0x0409)
+        "ATOLYE",                // 1: Manufacturer
+        "N3B_rx_v1",                   // 2: Product
+        "10489777",                   // 3: Serials, should use chip ID
+        "UAC2",                     // 4: Audio Interface
+        "CDC",                      // 5: CDC Interface
 };
 
 static uint16_t _desc_str[32];
@@ -170,8 +175,7 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
   {
     memcpy(&_desc_str[1], string_desc_arr[0], 2);
     chr_count = 1;
-  }else
-  {
+  } else {
     // Convert ASCII string into UTF-16
 
     if ( !(index < sizeof(string_desc_arr)/sizeof(string_desc_arr[0])) ) return NULL;

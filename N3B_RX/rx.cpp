@@ -416,35 +416,10 @@ static void on_usb_set_mutevol(bool mute, int16_t vol)
 
 static void on_usb_audio_tx_ready()
 {
-  // uint8_t usb_buf[SAMPLE_BUFFER_SIZE * sizeof(int16_t)*2] = {0};
-  uint8_t usb_buf[192] = {0};
-  // for (uint16_t cnt = 0 ; cnt < (SAMPLE_BUFFER_SIZE * sizeof(int16_t)) - 2; cnt+=4)
-  // for (uint16_t cnt = 0 ; cnt < (sizeof(usb_buf) ); cnt+=4)
-  // {
-  //   usb_buf[cnt + 0] = cnt;
-  //   usb_buf[cnt + 1] = 20;
-  //   usb_buf[cnt + 2] = cnt;
-  //   usb_buf[cnt + 3] = 19;
-  // }
-// printf("%d.",sizeof(usb_buf));
-  // Callback from TinyUSB library when all data is ready
-  // to be transmitted.
-  //
+  uint8_t usb_buf[SAMPLE_BUFFER_SIZE * sizeof(int16_t)] = {0};
   // Write local buffer to the USB microphone
-  ring_buffer_pop(&usb_ring_buffer, usb_buf, 192);
-  // printf(".\r\n");
-  // for(uint8_t ca=0;ca<96; ca++)
-  // {
-  //   printf("%d\t%d\r\n",ca,usb_buf[ca]);
-  // }
-
-  // memcpy(&usb_buf,&mybuf , 192 );
-  // for (uint8_t mz = 0; mz<96; mz++)
-  // {
-  //   usb_buf[mz] = mybuf[mz];
-  // }
-
-  usb_audio_device_write(usb_buf, 192);
+  ring_buffer_pop(&usb_ring_buffer, usb_buf, sizeof(usb_buf));
+  usb_audio_device_write(usb_buf, sizeof(usb_buf));
 }
 
 
@@ -458,7 +433,7 @@ uint16_t __not_in_flash_func(rx::process_block)(uint16_t adc_samples[], int16_t 
   critical_section_exit(&usb_volumute);
 
   //process adc IQ samples to produce raw audio
-  int16_t usb_audio[96] ;//2*2*2*adc_block_size/decimation_rate];
+  int16_t usb_audio[96] ; //2*2*2*adc_block_size/decimation_rate];
   uint16_t num_samples = 96; //rx_dsp_inst.process_block(adc_samples, usb_audio);
   
   // //post process audio for USB and PWM
@@ -497,6 +472,7 @@ uint16_t __not_in_flash_func(rx::process_block)(uint16_t adc_samples[], int16_t 
   // memcpy(&mybuf, &adc_samples, 192);
   for (uint8_t ck=0;ck<96;ck++) 
   {
+    // adc_samples[ck]  = (ck&1) ? 12000:16000;
     usb_audio[ck] = adc_samples[ck] * 16;
     mybuf[ck] = adc_samples[ck] * 10;
     // if (adc_samples[ck] != usb_audio[ck]) printf("AMANIN BOO %d\t%d\%d\r\n",ck,adc_samples[ck],usb_audio[ck] );
@@ -505,7 +481,7 @@ uint16_t __not_in_flash_func(rx::process_block)(uint16_t adc_samples[], int16_t 
 
 
   //add usb audio to ring buffer
-  ring_buffer_push_ovr(&usb_ring_buffer, (uint8_t *)usb_audio, 192); 
+  ring_buffer_push_ovr(&usb_ring_buffer, (uint8_t *)usb_audio, 192); //sizeof(usb_audio)
   // printf("rb %d\r\n",ring_buffer_get_num_bytes(&usb_ring_buffer));
   return num_samples;// * interpolation_rate;
 }
@@ -520,7 +496,7 @@ void rx::run()
     repeating_timer_t usb_timer;
     hard_assert(pool);
 
-    // here the delay theoretically should be 1067 (1ms = 1 / (15000 / 16))
+    // here the delay theoretically should be 1067 (1ms = 1 / (15000 / 16))         1 / 48000 / 32
     // however the 'usb_microphone_task' should be called more often, but not too often
     // to save compute
 //    bool ret = alarm_pool_add_repeating_timer_us(pool, 1067, usb_callback, NULL, &usb_timer);
