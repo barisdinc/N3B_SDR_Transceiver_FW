@@ -1193,7 +1193,7 @@ void ui::autorestore()
   waterfall_inst.configure_display(
       (settings[idx_hw_setup] & mask_tft_settings) >> flag_tft_settings,
       (settings[idx_hw_setup] & mask_tft_colour) >> flag_tft_colour);
-
+  waterfall_inst.configure_display(6,0);
 }
 
 //Upload memories via USB interface
@@ -2788,10 +2788,10 @@ void ui::do_ui()
     }
 }
 
-#define OLED_I2C_SDA_PIN (16) //(18)
-#define OLED_I2C_SCL_PIN (17) //(19)
+#define OLED_I2C_SDA_PIN (18) //(16) //(18)
+#define OLED_I2C_SCL_PIN (19) //(17) //(19)
 #define OLED_I2C_SPEED (400UL)
-#define OLED_I2C_INST (i2c0) //(i2c1)
+#define OLED_I2C_INST (i2c1) //(i2c1)
 
 static uint8_t u8x8_gpio_and_delay_pico(u8x8_t *u8x8, uint8_t msg, uint8_t arg_int, void *arg_ptr)
 {

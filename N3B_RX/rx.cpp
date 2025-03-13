@@ -473,8 +473,8 @@ uint16_t __not_in_flash_func(rx::process_block)(uint16_t adc_samples[], int16_t 
   for (uint8_t ck=0;ck<96;ck++) 
   {
     // adc_samples[ck]  = (ck&1) ? 12000:16000;
-    usb_audio[ck] = adc_samples[ck] * 16;
-    mybuf[ck] = adc_samples[ck] * 10;
+    usb_audio[ck] = adc_samples[ck];// * 16;
+    mybuf[ck] = adc_samples[ck];// * 10;
     // if (adc_samples[ck] != usb_audio[ck]) printf("AMANIN BOO %d\t%d\%d\r\n",ck,adc_samples[ck],usb_audio[ck] );
     // if (adc_samples[ck] != mybuf[ck]) printf("AMANIN VUU %d\t%d\t%d\r\n",ck,adc_samples[ck],mybuf[ck]);
   }
