@@ -2902,7 +2902,7 @@ ui::ui(rx_settings & settings_to_apply, rx_status & status, rx &receiver, uint8_
   setup_display();
   setup_encoder();
   disp.buffer = u8g2.tile_buf_ptr;
-  // waterfall_inst.configure_display(7,0);
+
   u8g2_SetI2CAddress(&u8g2, 0x78);
   u8g2_InitDisplay(&u8g2);
   u8g2_SetPowerSave(&u8g2, 0);

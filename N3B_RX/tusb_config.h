@@ -30,24 +30,6 @@
 extern "C" {
 #endif
 
-
-//--------------------------------------------------------------------+
-// Board Specific Configuration
-//--------------------------------------------------------------------+
-
-// RHPort number used for device can be defined by board.mk, default to port 0
-#ifndef BOARD_TUD_RHPORT
-#define BOARD_TUD_RHPORT      0
-#endif
-
-// RHPort max operational speed can defined by board.mk
-#ifndef BOARD_TUD_MAX_SPEED
-#define BOARD_TUD_MAX_SPEED   OPT_MODE_DEFAULT_SPEED
-#endif
-
-
-
-
 //--------------------------------------------------------------------
 // COMMON CONFIGURATION
 //--------------------------------------------------------------------
@@ -57,28 +39,18 @@ extern "C" {
 #error CFG_TUSB_MCU must be defined
 #endif
 
-// RHPort number used for device can be defined by board.mk, default to port 0
-#ifndef BOARD_DEVICE_RHPORT_NUM
-  #define BOARD_DEVICE_RHPORT_NUM     0
-#endif
-
-#ifndef BOARD_DEVICE_RHPORT_SPEED
-  #define BOARD_DEVICE_RHPORT_SPEED   OPT_MODE_FULL_SPEED
-#endif
-
+#if CFG_TUSB_MCU == OPT_MCU_LPC43XX || CFG_TUSB_MCU == OPT_MCU_LPC18XX || CFG_TUSB_MCU == OPT_MCU_MIMXRT10XX
+#define CFG_TUSB_RHPORT0_MODE       (OPT_MODE_DEVICE | OPT_MODE_HIGH_SPEED)
+#else
 #define CFG_TUSB_RHPORT0_MODE       OPT_MODE_DEVICE
+#endif
 
 #ifndef CFG_TUSB_OS
-  #define CFG_TUSB_OS                 OPT_OS_FREERTOS
-#endif
-
-// Espressif IDF requires "freertos/" prefix in include path
-#if TU_CHECK_MCU(OPT_MCU_ESP32S2, OPT_MCU_ESP32S3)
-  #define CFG_TUSB_OS_INC_PATH    freertos/
+#define CFG_TUSB_OS                 OPT_OS_NONE
 #endif
 
 #ifndef CFG_TUSB_DEBUG
-  #define CFG_TUSB_DEBUG              0
+#define CFG_TUSB_DEBUG              0
 #endif
 
 // CFG_TUSB_DEBUG is defined by compiler in DEBUG build
@@ -99,29 +71,16 @@ extern "C" {
 #define CFG_TUSB_MEM_ALIGN          __attribute__ ((aligned(4)))
 #endif
 
-
-
-
-//------------------------------------------------------------------------------------
-// gpt nin yapmamı istediği değişiklikler
-//------------------------------------------------------------------------------------
-
-//#define CFG_TUD_AUDIO_FUNC_1_DESC_TYPE 1  // UAC2 yerine UAC1 kullan
-//#define CFG_TUD_AUDIO_FUNC_1_N_AS_INT 1  // Alternatif ses arayüzü sayısını 1 yap
-//#define CFG_TUD_AUDIO_ENABLE_ENCODING 0  // Windows ile UAC1 uyumlu hale getir
-//#define CFG_TUD_AUDIO_ENABLE_TYPE_I_ENCODING 0  // Windows ile uyumlu hale getir
-
-
 //--------------------------------------------------------------------
 // DEVICE CONFIGURATION
 //--------------------------------------------------------------------
 
 #ifndef CFG_TUD_ENDPOINT0_SIZE
-#define CFG_TUD_ENDPOINT0_SIZE    64
+#define CFG_TUD_ENDPOINT0_SIZE    (64)
 #endif
 
 //------------- CLASS -------------//
-#define CFG_TUD_CDC               0
+#define CFG_TUD_CDC               1
 #define CFG_TUD_MSC               0
 #define CFG_TUD_HID               0
 #define CFG_TUD_MIDI              0
@@ -131,44 +90,23 @@ extern "C" {
 //--------------------------------------------------------------------
 // AUDIO CLASS DRIVER CONFIGURATION
 //--------------------------------------------------------------------
-#define TUD_AUDIO_MIC_TWO_CH_DESC_LEN (TUD_AUDIO_DESC_IAD_LEN\
-  + TUD_AUDIO_DESC_STD_AC_LEN\
-  + TUD_AUDIO_DESC_CS_AC_LEN\
-  + TUD_AUDIO_DESC_CLK_SRC_LEN\
-  + TUD_AUDIO_DESC_INPUT_TERM_LEN\
-  + TUD_AUDIO_DESC_OUTPUT_TERM_LEN\
-  + TUD_AUDIO_DESC_FEATURE_UNIT_TWO_CHANNEL_LEN\
-  + TUD_AUDIO_DESC_STD_AS_INT_LEN\
-  + TUD_AUDIO_DESC_STD_AS_INT_LEN\
-  + TUD_AUDIO_DESC_CS_AS_INT_LEN\
-  + TUD_AUDIO_DESC_TYPE_I_FORMAT_LEN\
-  + TUD_AUDIO_DESC_STD_AS_ISO_EP_LEN\
-  + TUD_AUDIO_DESC_CS_AS_ISO_EP_LEN)
 
 // Have a look into audio_device.h for all configurations
 
-#define CFG_TUD_AUDIO_FUNC_1_DESC_LEN                                 TUD_AUDIO_MIC_TWO_CH_DESC_LEN
-
-#define CFG_TUD_AUDIO_FUNC_1_N_AS_INT                                 1
-#define CFG_TUD_AUDIO_FUNC_1_CTRL_BUF_SZ                              64
+#define CFG_TUD_AUDIO_FUNC_1_DESC_LEN                                 TUD_AUDIO_MIC_ONE_CH_DESC_LEN
+#define CFG_TUD_AUDIO_FUNC_1_N_AS_INT                                 1                                       // Number of Standard AS Interface Descriptors (4.9.1) defined per audio function - this is required to be able to remember the current alternate settings of these interfaces - We restrict us here to have a constant number for all audio functions (which means this has to be the maximum number of AS interfaces an audio function has and a second audio function with less AS interfaces just wastes a few bytes)
+#define CFG_TUD_AUDIO_FUNC_1_CTRL_BUF_SZ                              64                                      // Size of control request buffer
 
 #define CFG_TUD_AUDIO_ENABLE_EP_IN                                    1
-#define CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_TX                    2         // This value is not required by the driver, it parses this information from the descriptor once the alternate interface is set by the host - we use it for the setup
-#define CFG_TUD_AUDIO_FUNC_1_N_CHANNELS_TX                            2         // This value is not required by the driver, it parses this information from the descriptor once the alternate interface is set by the host - we use it for the setup
-//#define CFG_TUD_AUDIO_EP_SZ_IN                                        48 * CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_TX * CFG_TUD_AUDIO_FUNC_1_N_CHANNELS_TX      // 48 Samples (48 kHz) x 2 Bytes/Sample x CFG_TUD_AUDIO_N_CHANNELS_TX Channels - the Windows driver always needs an extra sample per channel of space more, otherwise it complains... found by trial and error
-//Eğer Windows hâlâ cihazı tanımıyorsa, bunu 52 veya 54 kHz olarak artırmayı deneyebilirsiniz.
-#define CFG_TUD_AUDIO_EP_SZ_IN                                          49 * CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_TX * CFG_TUD_AUDIO_FUNC_1_N_CHANNELS_TX  //gpt  Windows 48 kHz örnekleme frekansı için ekstra bir sample alanı gerektiriyo
-
-#define CFG_TUD_AUDIO_FUNC_1_EP_IN_SZ_MAX                             CFG_TUD_AUDIO_EP_SZ_IN
-//#define CFG_TUD_AUDIO_FUNC_1_EP_IN_SZ_MAX 256  //gpt
+#define CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_TX                    2                                       // Driver gets this info from the descriptors - we define it here to use it to setup the descriptors and to do calculations with it below
+#define CFG_TUD_AUDIO_FUNC_1_N_CHANNELS_TX                            1                                       // Driver gets this info from the descriptors - we define it here to use it to setup the descriptors and to do calculations with it below - be aware: for different number of channels you need another descriptor!
+#define CFG_TUD_AUDIO_EP_SZ_IN                                        (15 + 1) * CFG_TUD_AUDIO_FUNC_1_N_BYTES_PER_SAMPLE_TX * CFG_TUD_AUDIO_FUNC_1_N_CHANNELS_TX      // 15 Samples x 2 Bytes/Sample x 1 Channel
+#define CFG_TUD_AUDIO_FUNC_1_EP_IN_SZ_MAX                             CFG_TUD_AUDIO_EP_SZ_IN                  // Maximum EP IN size for all AS alternate settings used
 #define CFG_TUD_AUDIO_FUNC_1_EP_IN_SW_BUF_SZ                          CFG_TUD_AUDIO_EP_SZ_IN
 
-
-#define CFG_TUD_AUDIO_ENABLE_ENCODING                                 0
-#define CFG_TUD_AUDIO_ENABLE_TYPE_I_ENCODING                          0
-#define CFG_TUD_AUDIO_FUNC_1_CHANNEL_PER_FIFO_TX                      1         // One I2S stream contains two channels, each stream is saved within one support FIFO - this value is currently fixed, the driver does not support a changing value
-#define CFG_TUD_AUDIO_FUNC_1_N_TX_SUPP_SW_FIFO                        (CFG_TUD_AUDIO_FUNC_1_N_CHANNELS_TX / CFG_TUD_AUDIO_FUNC_1_CHANNEL_PER_FIFO_TX)
-#define CFG_TUD_AUDIO_FUNC_1_TX_SUPP_SW_FIFO_SZ                       (CFG_TUD_AUDIO_EP_SZ_IN / CFG_TUD_AUDIO_FUNC_1_N_TX_SUPP_SW_FIFO)
+// CDC FIFO size of TX and RX
+#define CFG_TUD_CDC_RX_BUFSIZE                    64
+#define CFG_TUD_CDC_TX_BUFSIZE                    64
 
 #ifdef __cplusplus
 }

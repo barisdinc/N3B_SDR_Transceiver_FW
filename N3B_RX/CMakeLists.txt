@@ -61,6 +61,7 @@ if(PICO_BOARD STREQUAL "pico")
       ssd1306.c
       main_rx.cpp
       vco.c
+      nco.cpp
       rx.cpp
       rx_dsp.cpp
       fft.cpp
@@ -78,7 +79,7 @@ if(PICO_BOARD STREQUAL "pico")
       adf4360.cpp
   )
 
-  # pico_generate_pio_header(N3B_rx ${CMAKE_CURRENT_LIST_DIR}/nco.pio)
+  pico_generate_pio_header(N3B_rx ${CMAKE_CURRENT_LIST_DIR}/nco.pio)
   pico_generate_pio_header(N3B_rx ${CMAKE_CURRENT_LIST_DIR}/quadrature_encoder.pio)
   pico_add_extra_outputs(N3B_rx)
   # enable usb output, disable uart output

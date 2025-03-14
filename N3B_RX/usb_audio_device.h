@@ -10,8 +10,8 @@
 
 #include "tusb.h"
 
-#define USB_A_SAMPLE_RATE (48000) 
-#define SAMPLE_BUFFER_SIZE ((CFG_TUD_AUDIO_EP_SZ_IN / 2) - 2)
+#define USB_A_SAMPLE_RATE (15000)
+#define SAMPLE_BUFFER_SIZE ((CFG_TUD_AUDIO_EP_SZ_IN / 2) - 1)
 
 #ifdef __cplusplus
 extern "C"

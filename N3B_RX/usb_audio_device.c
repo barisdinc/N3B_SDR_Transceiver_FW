@@ -39,7 +39,6 @@ audio_control_range_4_n_t(1) sampleFreqRng; 						// Sample frequency range stat
 static usb_audio_device_tx_ready_handler_t usb_audio_device_tx_ready_handler = NULL;
 static usb_audio_device_mutevol_handler_t usb_audio_device_mutevol_handler = NULL;
 
-
 /*------------- MAIN -------------*/
 void usb_audio_device_init()
 {
@@ -92,8 +91,7 @@ bool tud_audio_set_req_ep_cb(uint8_t rhport, tusb_control_request_t const * p_re
   uint8_t channelNum = TU_U16_LOW(p_request->wValue);
   uint8_t ctrlSel = TU_U16_HIGH(p_request->wValue);
   uint8_t ep = TU_U16_LOW(p_request->wIndex);
-  // printf("channel1 %d\r\n", channelNum);
-  // printf("c1:%d\r\n", channelNum);
+
   (void) channelNum; (void) ctrlSel; (void) ep;
 
   return false; 	// Yet not implemented
@@ -112,10 +110,9 @@ bool tud_audio_set_req_itf_cb(uint8_t rhport, tusb_control_request_t const * p_r
   uint8_t channelNum = TU_U16_LOW(p_request->wValue);
   uint8_t ctrlSel = TU_U16_HIGH(p_request->wValue);
   uint8_t itf = TU_U16_LOW(p_request->wIndex);
-  // printf("channel2 %d\r\n", channelNum);
-  // printf("c2:%d\r\n", channelNum);
+
   (void) channelNum; (void) ctrlSel; (void) itf;
-  
+
   return false; 	// Yet not implemented
 }
 
@@ -131,8 +128,7 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const * 
   uint8_t entityID = TU_U16_HIGH(p_request->wIndex);
 
   (void) itf;
-  // printf("channel3 %d\r\n", channelNum);
-  // printf("c3:%d\r\n", channelNum);
+
   // We do not support any set range requests here, only current value requests
   TU_VERIFY(p_request->bRequest == AUDIO_CS_REQ_CUR);
 
@@ -148,7 +144,7 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const * 
         mute[channelNum] = ((audio_control_cur_1_t*) pBuff)->bCur;
 
         TU_LOG2("    Set Mute: %d of channel: %u\r\n", mute[channelNum], channelNum);
-      //  printf("SM%d:%u\r\n", mute[channelNum], channelNum);
+//        printf("    Set Mute: %d of channel: %u\r\n", mute[channelNum], channelNum);
         if (usb_audio_device_mutevol_handler)
         {
           usb_audio_device_mutevol_handler((bool)mute[channelNum], (int16_t)volume[channelNum]);
@@ -164,8 +160,7 @@ bool tud_audio_set_req_entity_cb(uint8_t rhport, tusb_control_request_t const * 
 
         TU_LOG2("    Set Volume: %d dB of channel: %u\r\n", volume[channelNum], channelNum);
 //        printf("    Set Volume: %d dB of channel: %u\r\n", volume[channelNum], channelNum);
-      //  printf("V:%d\r\n", volume[channelNum]);
-if (usb_audio_device_mutevol_handler)
+        if (usb_audio_device_mutevol_handler)
         {
           usb_audio_device_mutevol_handler((bool)mute[channelNum], (int16_t)volume[channelNum]);
         }
@@ -190,7 +185,6 @@ bool tud_audio_get_req_ep_cb(uint8_t rhport, tusb_control_request_t const * p_re
   uint8_t channelNum = TU_U16_LOW(p_request->wValue);
   uint8_t ctrlSel = TU_U16_HIGH(p_request->wValue);
   uint8_t ep = TU_U16_LOW(p_request->wIndex);
-  // printf("channel4 %d\r\n", channelNum);
 
   (void) channelNum; (void) ctrlSel; (void) ep;
 
@@ -208,7 +202,6 @@ bool tud_audio_get_req_itf_cb(uint8_t rhport, tusb_control_request_t const * p_r
   uint8_t channelNum = TU_U16_LOW(p_request->wValue);
   uint8_t ctrlSel = TU_U16_HIGH(p_request->wValue);
   uint8_t itf = TU_U16_LOW(p_request->wIndex);
-  // printf("channel5 %d\r\n", channelNum);
 
   (void) channelNum; (void) ctrlSel; (void) itf;
 
@@ -225,14 +218,13 @@ bool tud_audio_get_req_entity_cb(uint8_t rhport, tusb_control_request_t const * 
   uint8_t ctrlSel = TU_U16_HIGH(p_request->wValue);
   // uint8_t itf = TU_U16_LOW(p_request->wIndex); 			// Since we have only one audio function implemented, we do not need the itf value
   uint8_t entityID = TU_U16_HIGH(p_request->wIndex);
-  // printf("channel6 %d\r\n", channelNum);
 
   // Input terminal (Microphone input)
   if (entityID == 1)
   {
     switch (ctrlSel)
     {
-      case AUDIO_TE_CTRL_CONNECTOR:
+      case AUDIO_TE_CTRL_CONNECTOR:;
       // The terminal connector control only has a get request with only the CUR attribute.
 
       audio_desc_channel_cluster_t ret;
@@ -271,7 +263,7 @@ bool tud_audio_get_req_entity_cb(uint8_t rhport, tusb_control_request_t const * 
 	    return tud_control_xfer(rhport, p_request, &volume[channelNum], sizeof(volume[channelNum]));
 	  case AUDIO_CS_REQ_RANGE:
 	    TU_LOG2("    Get Volume range of channel: %u\r\n", channelNum);
-printf("A");
+
 	    // Copy values - only for testing - better is version below
 	    audio_control_range_2_n_t(1) ret;
 
@@ -285,7 +277,7 @@ printf("A");
 	    // Unknown/Unsupported control
 	  default: TU_BREAKPOINT(); return false;
 	}
-  break; //LOY LOY
+
 	// Unknown/Unsupported control
 	  default: TU_BREAKPOINT(); return false;
     }
@@ -312,7 +304,7 @@ printf("A");
 	    // Unknown/Unsupported control
 	  default: TU_BREAKPOINT(); return false;
 	}
-  break;//LOY LOY
+
 	  case AUDIO_CS_CTRL_CLK_VALID:
 	    // Only cur attribute exists for this request
 	    TU_LOG2("    Get Sample Freq. valid\r\n");
@@ -333,7 +325,6 @@ bool tud_audio_tx_done_pre_load_cb(uint8_t rhport, uint8_t itf, uint8_t ep_in, u
   (void) itf;
   (void) ep_in;
   (void) cur_alt_setting;
-  // printf("test 1\r\n");
 
   if (usb_audio_device_tx_ready_handler)
   {
@@ -350,7 +341,6 @@ bool tud_audio_tx_done_post_load_cb(uint8_t rhport, uint16_t n_bytes_copied, uin
   (void) itf;
   (void) ep_in;
   (void) cur_alt_setting;
-  // printf("test 2\r\n");
 
   return true;
 }
@@ -359,7 +349,6 @@ bool tud_audio_set_itf_close_EP_cb(uint8_t rhport, tusb_control_request_t const 
 {
   (void) rhport;
   (void) p_request;
-  // printf("test 3\r\n");
 
   return true;
 }

@@ -6,6 +6,7 @@
 
 #include "rx.h"
 #include "vco.h"
+#include "nco.h"
 #include "fft_filter.h"
 #include "utils.h"
 #include "usb_audio_device.h"
@@ -13,10 +14,9 @@
 #include "adf4360.h"
 
 //ring buffer for USB data
-#define USB_BUF_SIZE 8192 //(sizeof(int16_t) * 2 * (1 + (adc_block_size/decimation_rate)))
+#define USB_BUF_SIZE (sizeof(int16_t) * 2 * (1 + (adc_block_size/decimation_rate)))
 static ring_buffer_t usb_ring_buffer;
 static uint8_t usb_buf[USB_BUF_SIZE];
-static uint16_t mybuf[96] = {0};
 
 //buffers and dma for ADC
 int rx::adc_dma_ping;
@@ -99,8 +99,7 @@ void rx::pwm_ramp_down()
     level = std::min(level, (int16_t)pwm_max);
     level = std::max(level, (int16_t)0);
     phase += phase_increment;
-    // pwm_set_gpio_level(16, level);
-    pwm_set_gpio_level(22, level);
+    pwm_set_gpio_level(16, level);
   }
 }
 
@@ -119,8 +118,7 @@ void rx::pwm_ramp_up()
     level = std::min(level, (int16_t)pwm_max);
     level = std::max(level, (int16_t)0);
     phase += phase_increment;
-    // pwm_set_gpio_level(16, level);
-    pwm_set_gpio_level(22, level);
+    pwm_set_gpio_level(16, level);
   }
 }
 
@@ -154,8 +152,8 @@ void rx::apply_settings()
       //apply frequency calibration
       tuned_frequency_Hz *= 1e6/(1e6+settings_to_apply.ppm);
 
-      // uint32_t system_clock_rate;// = 130000000;
-//BARIS      nco_frequency_Hz = nco_set_frequency(pio, sm, tuned_frequency_Hz, system_clock_rate);
+      uint32_t system_clock_rate;// = 130000000;
+      nco_frequency_Hz = nco_set_frequency(pio, sm, tuned_frequency_Hz, system_clock_rate);
       // printf("FRQ: %lf\r\n",tuned_frequency_Hz);
       // adf4360_evaluate(777000);
       offset_frequency_Hz = tuned_frequency_Hz - nco_frequency_Hz;
@@ -210,8 +208,7 @@ void rx::apply_settings()
       }
 
       //apply pwm_max
-      // pwm_max = (system_clock_rate/audio_sample_rate)-1;
-      pwm_max = (125000000/audio_sample_rate)-1;
+      pwm_max = (system_clock_rate/audio_sample_rate)-1;
       pwm_scale = 1+((INT16_MAX * 2)/pwm_max);
       pwm_set_wrap(audio_pwm_slice_num, pwm_max); 
 
@@ -278,12 +275,11 @@ rx::rx(rx_settings & settings_to_apply, rx_status & status) : settings_to_apply(
     suspend = false;
 
     //Configure PIO to act as quadrature oscilator
-    //BARIS pio = pio0;
-    //BARIS offset = pio_add_program(pio, &nco_program);
-    //BARIS sm = pio_claim_unused_sm(pio, true);
-    //BARIS nco_program_init(pio, sm, offset);
-//    ring_buffer_init(&usb_ring_buffer, usb_buf, USB_BUF_SIZE, 1);
-    ring_buffer_init(&usb_ring_buffer, usb_buf, 384, 1);
+    pio = pio0;
+    offset = pio_add_program(pio, &nco_program);
+    sm = pio_claim_unused_sm(pio, true);
+    nco_program_init(pio, sm, offset);
+    ring_buffer_init(&usb_ring_buffer, usb_buf, USB_BUF_SIZE, 1);
 
     //configure SMPS into power save mode
     const uint PSU_PIN = 23;
@@ -298,7 +294,7 @@ rx::rx(rx_settings & settings_to_apply, rx_status & status) : settings_to_apply(
     adc_gpio_init(27);//Q channel (1) - configure pin for ADC use
     adc_gpio_init(29);//Battery - configure pin for ADC use
     adc_set_temp_sensor_enabled(true);
-    adc_set_clkdiv(500); //48e6/480e3
+    adc_set_clkdiv(99); //48e6/480e3
 
     //band select
     // gpio_init(2);//band 0
@@ -390,7 +386,6 @@ void rx::read_batt_temp()
 
 static bool __not_in_flash_func(usb_callback)(repeating_timer_t *rt)
 {
-  // printf(".");
   usb_audio_device_task();
   return true; // keep repeating
 }
@@ -407,7 +402,7 @@ static bool usb_mute = false;   // usb mute control
 // usb mute setting = true is muted
 static void on_usb_set_mutevol(bool mute, int16_t vol)
 {
-  // printf ("usbcb: got mute %d vol %d\n", mute, vol);
+  //printf ("usbcb: got mute %d vol %d\n", mute, vol);
   critical_section_enter_blocking(&usb_volumute);
   usb_volume = vol + 90; // defined as -90 to 90 => 0 to 180
   usb_mute = mute;
@@ -417,6 +412,10 @@ static void on_usb_set_mutevol(bool mute, int16_t vol)
 static void on_usb_audio_tx_ready()
 {
   uint8_t usb_buf[SAMPLE_BUFFER_SIZE * sizeof(int16_t)] = {0};
+
+  // Callback from TinyUSB library when all data is ready
+  // to be transmitted.
+  //
   // Write local buffer to the USB microphone
   ring_buffer_pop(&usb_ring_buffer, usb_buf, sizeof(usb_buf));
   usb_audio_device_write(usb_buf, sizeof(usb_buf));
@@ -425,70 +424,55 @@ static void on_usb_audio_tx_ready()
 
 uint16_t __not_in_flash_func(rx::process_block)(uint16_t adc_samples[], int16_t pwm_audio[])
 {
-  // printf("X");
   //capture usb volume and mute settings
   critical_section_enter_blocking(&usb_volumute);
-  // int32_t safe_usb_volume = usb_volume;
-  // bool safe_usb_mute = usb_mute;
+  int32_t safe_usb_volume = usb_volume;
+  bool safe_usb_mute = usb_mute;
   critical_section_exit(&usb_volumute);
 
   //process adc IQ samples to produce raw audio
-  int16_t usb_audio[96] ; //2*2*2*adc_block_size/decimation_rate];
-  uint16_t num_samples = 96; //rx_dsp_inst.process_block(adc_samples, usb_audio);
+  int16_t usb_audio[adc_block_size/decimation_rate];
+  uint16_t num_samples = rx_dsp_inst.process_block(adc_samples, usb_audio);
   
-  // //post process audio for USB and PWM
-  // uint16_t odx = 0;
-  // for(uint16_t idx=0; idx<num_samples; ++idx)
-  // {
-  //   int16_t audio = usb_audio[idx];
-
-  //   //digital volume control
-  //   audio = ((int32_t)audio * gain_numerator) >> 8;
-
-  //   //convert to unsigned value in range 0 to 500 to output to PWM
-  //   audio += INT16_MAX;
-  //   audio = (uint16_t)audio/pwm_scale;
-
-  //   //interpolate to PWM rate
-  //   static int16_t last_audio = 0;
-  //   int32_t comb = audio - last_audio;
-  //   last_audio = audio;
-  //   for(uint8_t subsample = 0; subsample < interpolation_rate; ++subsample)
-  //   {
-  //     static int32_t integrator = 0;
-  //     integrator += comb;
-  //     pwm_audio[odx++] = integrator >> 4;
-  //   }
-
-  //   //usb audio volume is controlled from usb
-  //   if (safe_usb_mute) {
-  //     usb_audio[idx] = 0;
-  //   } else {
-  //     usb_audio[idx] = (usb_audio[idx] * safe_usb_volume)/180;
-  //   }
-  // }
-  // printf("ns %d\r\n",256);
-  // memcpy(&usb_audio, &adc_samples, 192);
-  // memcpy(&mybuf, &adc_samples, 192);
-  for (uint8_t ck=0;ck<96;ck++) 
+  //post process audio for USB and PWM
+  uint16_t odx = 0;
+  for(uint16_t idx=0; idx<num_samples; ++idx)
   {
-    // adc_samples[ck]  = (ck&1) ? 12000:16000;
-    usb_audio[ck] = adc_samples[ck];// * 16;
-    mybuf[ck] = adc_samples[ck];// * 10;
-    // if (adc_samples[ck] != usb_audio[ck]) printf("AMANIN BOO %d\t%d\%d\r\n",ck,adc_samples[ck],usb_audio[ck] );
-    // if (adc_samples[ck] != mybuf[ck]) printf("AMANIN VUU %d\t%d\t%d\r\n",ck,adc_samples[ck],mybuf[ck]);
+    int16_t audio = usb_audio[idx];
+
+    //digital volume control
+    audio = ((int32_t)audio * gain_numerator) >> 8;
+
+    //convert to unsigned value in range 0 to 500 to output to PWM
+    audio += INT16_MAX;
+    audio = (uint16_t)audio/pwm_scale;
+
+    //interpolate to PWM rate
+    static int16_t last_audio = 0;
+    int32_t comb = audio - last_audio;
+    last_audio = audio;
+    for(uint8_t subsample = 0; subsample < interpolation_rate; ++subsample)
+    {
+      static int32_t integrator = 0;
+      integrator += comb;
+      pwm_audio[odx++] = integrator >> 4;
+    }
+
+    //usb audio volume is controlled from usb
+    if (safe_usb_mute) {
+      usb_audio[idx] = 0;
+    } else {
+      usb_audio[idx] = (usb_audio[idx] * safe_usb_volume)/180;
+    }
   }
 
-
   //add usb audio to ring buffer
-  ring_buffer_push_ovr(&usb_ring_buffer, (uint8_t *)usb_audio, 192); //sizeof(usb_audio)
-  // printf("rb %d\r\n",ring_buffer_get_num_bytes(&usb_ring_buffer));
-  return num_samples;// * interpolation_rate;
+  ring_buffer_push_ovr(&usb_ring_buffer, (uint8_t *)usb_audio, sizeof(int16_t) * num_samples); 
+  return num_samples * interpolation_rate;
 }
 
 void rx::run()
 {
-    // printf("Y");
     usb_audio_device_init();
     critical_section_init(&usb_volumute);
     usb_audio_device_set_tx_ready_handler(on_usb_audio_tx_ready);
@@ -496,13 +480,10 @@ void rx::run()
     repeating_timer_t usb_timer;
     hard_assert(pool);
 
-    // here the delay theoretically should be 1067 (1ms = 1 / (15000 / 16))         1 / 48000 / 32
+    // here the delay theoretically should be 1067 (1ms = 1 / (15000 / 16))
     // however the 'usb_microphone_task' should be called more often, but not too often
     // to save compute
-//    bool ret = alarm_pool_add_repeating_timer_us(pool, 1067, usb_callback, NULL, &usb_timer);
-    bool ret = alarm_pool_add_repeating_timer_us(pool, 1000, usb_callback, NULL, &usb_timer);
-    // 15K 1  1067
-    // 48K 2  1067 * 2 * 15/48
+    bool ret = alarm_pool_add_repeating_timer_us(pool, 1067 / 2, usb_callback, NULL, &usb_timer);
     hard_assert(ret);
 
     while(true)
@@ -521,7 +502,7 @@ void rx::run()
       audio_running = false;
       hw_clear_bits(&adc_hw->fcs, ADC_FCS_UNDER_BITS);
       hw_clear_bits(&adc_hw->fcs, ADC_FCS_OVER_BITS);
-      adc_set_clkdiv(500); //48000 / 96 = 500 ?-1
+      adc_set_clkdiv(100 - 1);
       adc_fifo_setup(true, true, 1, false, false);
       adc_select_input(0);
       adc_set_round_robin(3);
