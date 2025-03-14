@@ -16,6 +16,9 @@
 #include "button.h"
 #include "logo.h"
 #include "u8g2.h"
+#include <cstdint>
+#include "ili934x.h"
+#include "rx.h"
 
 // vscode cant find it and flags a problem (but the compiler can)
 #ifndef M_PI
@@ -164,6 +167,20 @@ class ui
   void display_show();
   int strchr_idx(const char str[], uint8_t c);
   bool do_splash();
+//ILI display
+  void configure_display(uint8_t settings, bool invert_colours);
+  void powerOn(bool state);
+  void draw();
+  uint16_t heatmap(uint8_t value, bool lighten = false, bool highlight = false);
+  uint16_t dBm_to_px(float power_dBm, int16_t px);
+  float S_to_dBm2(int S);
+  int dBm_to_S2(float power_dBm);
+  uint8_t waterfall_buffer[120][256];
+  uint8_t *ilispectrum;
+  ILI934X *display;
+  bool enabled = false;
+  bool power_state = true;
+  bool refresh = true;
 
   ssd1306_t disp;
   uint16_t cursor_x = 0;   // pixels 0-127
@@ -232,7 +249,7 @@ class ui
   rx &receiver;
   uint8_t *spectrum;
   uint8_t &dB10;
-  waterfall &waterfall_inst;
+  // waterfall &waterfall_inst;
   void apply_settings(bool suspend, bool settings_changed=true);
 
   u8g2_t u8g2;
@@ -242,7 +259,9 @@ class ui
   uint32_t * get_settings(){return &settings[0];};
   void autorestore();
   void do_ui();
-  ui(rx_settings & settings_to_apply, rx_status & status, rx &receiver, uint8_t *spectrum, uint8_t &dB10, waterfall &waterfall_inst);
+  void update_spectrum(rx &receiver, rx_settings &settings, rx_status &status, uint8_t spectrum[], uint8_t dB10);
+  // ui(rx_settings & settings_to_apply, rx_status & status, rx &receiver, uint8_t *spectrum, uint8_t &dB10, waterfall &waterfall_inst);
+  ui(rx_settings & settings_to_apply, rx_status & status, rx &receiver, uint8_t *ilispectrum, uint8_t &dB10);
 
 };
 

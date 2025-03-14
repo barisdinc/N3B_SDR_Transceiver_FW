@@ -19,8 +19,9 @@ uint8_t dB10=10;
 static rx_settings settings_to_apply;
 static rx_status status;
 static rx receiver(settings_to_apply, status);
-waterfall waterfall_inst;
-static ui user_interface(settings_to_apply, status, receiver, spectrum, dB10, waterfall_inst);
+// waterfall waterfall_inst;
+// static ui user_interface(settings_to_apply, status, receiver, spectrum, dB10, waterfall_inst);
+static ui user_interface(settings_to_apply, status, receiver, spectrum, dB10);
 
 void core1_main()
 {
@@ -64,7 +65,8 @@ int main()
       process_cat_control(settings_to_apply, status, receiver, user_interface.get_settings());
     }
 
-    waterfall_inst.update_spectrum(receiver, settings_to_apply, status, spectrum, dB10);
+    user_interface.update_spectrum(receiver, settings_to_apply, status, spectrum, dB10);
+    // waterfall_inst.update_spectrum(receiver, settings_to_apply, status, spectrum, dB10);
 
   }
 }
