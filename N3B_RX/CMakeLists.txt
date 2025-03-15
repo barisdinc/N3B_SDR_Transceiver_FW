@@ -52,6 +52,7 @@ add_library(
     u8g2
     ${U8G2_SRCS}
 )
+
 target_compile_options(u8g2 PRIVATE -Wno-unused-function -Wno-unused-variable)
 
 if(PICO_BOARD STREQUAL "pico")
@@ -83,8 +84,8 @@ if(PICO_BOARD STREQUAL "pico")
   pico_generate_pio_header(N3B_rx ${CMAKE_CURRENT_LIST_DIR}/quadrature_encoder.pio)
   pico_add_extra_outputs(N3B_rx)
   # enable usb output, disable uart output
-  pico_enable_stdio_usb(N3B_rx 0)
-  pico_enable_stdio_uart(N3B_rx 1)
+  pico_enable_stdio_usb(N3B_rx 1)
+  pico_enable_stdio_uart(N3B_rx 0)
   target_include_directories(N3B_rx PRIVATE ${CMAKE_CURRENT_LIST_DIR})
   target_link_libraries(N3B_rx PRIVATE pico_stdlib
                                        pico_multicore

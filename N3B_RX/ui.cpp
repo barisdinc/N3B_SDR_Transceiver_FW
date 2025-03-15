@@ -85,11 +85,13 @@ void ui::display_clear(bool colour)
   cursor_x = 0;
   cursor_y = 0;
   ssd1306_clear(&disp, colour);
+  //display->clear();
 }
 
 void ui::display_clear_str(uint32_t scale, bool colour)
 {
   ssd1306_fill_rectangle(&disp, 0, cursor_y, 128, 9*scale, colour);
+  // display->fillRect(0, cursor_y, 9*scale,  128, colour);
 }
 
 void ui::display_linen(uint8_t line)
@@ -116,13 +118,16 @@ uint16_t ui::display_get_y() { return cursor_y; }
 void ui::display_draw_separator(uint16_t y, uint32_t scale, bool colour){
   // always draw top line
   ssd1306_draw_line(&disp, 0, y, 127, y, colour);
+  // display->drawLine(0, y, 127, y, colour);
   // for 2px, just draw another below
   if (scale == 2) {
     ssd1306_draw_line(&disp, 0, y+1, 127, y+1, colour);
+    // display->drawLine(0, y+1, 127, y+1, colour);
   }
   // for 3px draw top and bottom, middle blank
   if (scale == 3) {
     ssd1306_draw_line(&disp, 0, y+2, 127, y+2, colour);
+    // display->drawLine(0, y+2, 127, y+2, colour);
   }
 }
 
@@ -135,9 +140,12 @@ void ui::display_print_char(char x, uint32_t scale, uint32_t style)
   int colour = 1;
   if (style & style_reverse) colour=0;
   if (style & style_xor) colour=2;
+  printf(".%c",x);
   if (scale & 0x01) { // odd numbers use 8x6 chars
     ssd1306_draw_char_with_font(&disp, cursor_x, cursor_y, scale, font_8x5, x, colour);
+    // display->drawString(cursor_x, cursor_y, font_8x5, &x, colour, COLOUR_BLACK);
   } else { // even, use 16x12
+    // display->drawString(cursor_x, cursor_y, font_16x12, &x, colour, COLOUR_BLACK);
     ssd1306_draw_char_with_font(&disp, cursor_x, cursor_y, scale/2, font_16x12, x, colour);
   }
   cursor_x += (6*scale);
@@ -199,8 +207,10 @@ void ui::display_print_str(const char str[], uint32_t scale, uint32_t style)
     }
     if (scale & 0x01) { // odd numbers use 8x6 chars
       ssd1306_draw_char_with_font(&disp, cursor_x, cursor_y, scale, font_8x5, str[i], colour);
+      display->drawString(cursor_x, cursor_y, font_8x5, &str[i], COLOUR_WHITE, COLOUR_BLACK);
     } else { // even, use 16x12
       ssd1306_draw_char_with_font(&disp, cursor_x, cursor_y, scale/2, font_16x12, str[i], colour);
+      display->drawString(cursor_x, cursor_y, font_16x12, &str[i], COLOUR_WHITE, COLOUR_BLACK);
     }
     if (style&style_bordered) {
       if (cursor_x < box_x1) box_x1=cursor_x;
@@ -233,6 +243,7 @@ void ui::display_print_freq(char separator, uint32_t frequency, uint32_t scale, 
   const int32_t kHz = frequency / 1000;
   frequency %= 1000;
   const int32_t Hz = frequency;
+  // snprintf(buff, 16, "10%c%2ld%c%03ld%c%03ld", separator,MHz, separator, kHz, separator, Hz);
   snprintf(buff, 16, "%2ld%c%03ld%c%03ld", MHz, separator, kHz, separator, Hz);
   display_print_str(buff, scale, style);
 }
@@ -243,7 +254,7 @@ void ui::display_draw_icon(uint8_t x, uint8_t y, uint8_t w, uint8_t h, const uin
   {
     for (uint8_t xx = 0; xx < w; ++xx)
     {
-      ssd1306_draw_pixel(&disp, x+h-xx-1, y+yy, (pixels[yy] >> xx) & 1);
+      display->setPixel(x+h-xx-1, y+yy,(pixels[yy] >> xx) & 1?COLOUR_RED:COLOUR_BLACK);//ssd1306_draw_pixel(&disp, x+h-xx-1, y+yy, (pixels[yy] >> xx) & 1);
     }
   }
 }
@@ -252,44 +263,46 @@ void ui::display_draw_volume(uint8_t v, uint8_t x)
 {
   const uint16_t mute_icon[15] = {0x0, 0xa, 0x1a, 0x38, 0x78, 0x6f8, 0x6f8, 0x6f8, 0x7f8, 0x6f8, 0x478, 0x838, 0x1018, 0x8, 0x0};
   const uint8_t scaled_volume = (v+5)*12/9;
+  display->fillRect(x, 38, 12, 16, display->colour565(0,0,0));
   if (v == 0)
   {
-    display_draw_icon(x, 0, 16, 15, mute_icon);
+    display_draw_icon(x, 50-13, 16, 15, mute_icon);
   }
   else
   {
     for (uint8_t i = 0; i < 16; i++)
     {
       uint8_t h = i * 12/16;
-      if(scaled_volume >= i) u8g2_DrawVLine(&u8g2, x + i, 13-h, h);
+      if(scaled_volume >= i) display->drawLine(x + i, 50-h, x+i, 50,display->colour565(0,255,200));//u8g2_DrawVLine(&u8g2, x + i, 13-h, h);
     }
   }
 }
 
 void ui::display_draw_battery(float v, uint8_t x)
 {
-  u8g2_DrawVLine(&u8g2, x+0 , 2, 12);
-  u8g2_DrawVLine(&u8g2, x+14, 2, 12);
-  u8g2_DrawVLine(&u8g2, x+15, 6,  4);
+  // Not a really important function, can be removed fully in future or implemented for fun on ILI display
+  // u8g2_DrawVLine(&u8g2, x+0 , 2, 12);
+  // u8g2_DrawVLine(&u8g2, x+14, 2, 12);
+  // u8g2_DrawVLine(&u8g2, x+15, 6,  4);
 
-  u8g2_DrawHLine(&u8g2, x+0, 2,  14);
-  u8g2_DrawHLine(&u8g2, x+0, 13, 14);
+  // u8g2_DrawHLine(&u8g2, x+0, 2,  14);
+  // u8g2_DrawHLine(&u8g2, x+0, 13, 14);
 
 
-  const bool vbus_present = gpio_get(24);
+  // const bool vbus_present = gpio_get(24);
 
-  if(vbus_present)
-  {
-    const uint16_t power_icon[8] = {0x10, 0x18, 0x11C, 0xDC, 0xF6, 0x72, 0x31, 0x10};
-    display_draw_icon(x+4, 4, 9, 8, power_icon);
-  }
-  else
-  {
-    const float v_min = 1.8f;
-    const float v_max = 5.5f;
-    const uint8_t pixels = 11.0f*(v-v_min)/(v_max-v_min);
-    u8g2_DrawBox(&u8g2, x+2, 4, pixels, 8);
-  }
+  // if(vbus_present)
+  // {
+  //   const uint16_t power_icon[8] = {0x10, 0x18, 0x11C, 0xDC, 0xF6, 0x72, 0x31, 0x10};
+  //   display_draw_icon(x+4, 4, 9, 8, power_icon);
+  // }
+  // else
+  // {
+  //   const float v_min = 1.8f;
+  //   const float v_max = 5.5f;
+  //   const uint8_t pixels = 11.0f*(v-v_min)/(v_max-v_min);
+  //   u8g2_DrawBox(&u8g2, x+2, 4, pixels, 8);
+  // }
 }
 
 void ui::display_show()
@@ -322,7 +335,7 @@ void ui::renderpage_original(rx_status & status, rx & receiver)
 
   receiver.access(false);
   const float power_dBm = status.signal_strength_dBm;
-  const float battery_voltage = 3.0f * 3.3f * (status.battery/65535.0f);
+  // const float battery_voltage = 3.0f * 3.3f * (status.battery/65535.0f);
   receiver.release();
 
   const uint8_t buffer_size = 21;
@@ -350,27 +363,30 @@ void ui::renderpage_original(rx_status & status, rx & receiver)
 
 
   //mode
-  const uint8_t text_height = 14u;
-  u8g2_SetFont(&u8g2, u8g2_font_9x15_tf);
-  u8g2_DrawStr(&u8g2, 0, text_height, modes[settings[idx_mode]]);
-  uint16_t x = u8g2_GetStrWidth(&u8g2, modes[0]) + 2;
+  // const uint8_t text_height = 14u;
+  // u8g2_SetFont(&u8g2, u8g2_font_9x15_tf);
+  // u8g2_DrawStr(&u8g2, 0, text_height, modes[settings[idx_mode]]);
+  uint16_t x = 0;//u8g2_GetStrWidth(&u8g2, modes[0]) + 2;
 
   //volume
   display_draw_volume(settings[idx_volume], x);
   x += 18;
 
   //battery
-  display_draw_battery(battery_voltage, x);
+  // display_draw_battery(battery_voltage, x);
 
   //power
   snprintf(buff, buffer_size, "% 4ddBm", (int)power_dBm);
-  uint16_t w = u8g2_GetStrWidth(&u8g2, buff);
-  u8g2_DrawStr(&u8g2, 127-w, text_height, buff);
+  // uint16_t w = u8g2_GetStrWidth(&u8g2, buff);
+  // u8g2_DrawStr(&u8g2, 127-w, text_height, buff);
+  display->drawString(227, 16, font_16x12, buff , COLOUR_WHITE, COLOUR_BLACK);
 
   //step size
-  u8g2_SetFont(&u8g2, u8g2_font_7x14_tf);
-  w = u8g2_GetStrWidth(&u8g2, steps[settings[idx_step]]);
-  u8g2_DrawStr(&u8g2, 127 - w, 42, steps[settings[idx_step]]);
+  // u8g2_SetFont(&u8g2, u8g2_font_7x14_tf);
+  // w = u8g2_GetStrWidth(&u8g2, steps[settings[idx_step]]);
+  // u8g2_DrawStr(&u8g2, 127 - w, 42, steps[settings[idx_step]]);
+  display->drawString(0, 16, font_16x12,steps[settings[idx_step]] , COLOUR_WHITE, COLOUR_BLACK);
+
 
   int8_t power_s = dBm_to_S(power_dBm);
   // const uint16_t seg_w = 8;
@@ -393,14 +409,14 @@ void ui::renderpage_original(rx_status & status, rx & receiver)
   // }
   // u8g2_DrawVLine(&u8g2, settings[idx_squelch] * (seg_w + 1) + seg_x + 2, seg_y, seg_h+4);
 
-  const char smeter[13][6] = {"S0", "S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "+10", "+20", "+30"};
+  const char smeter[13][6] = {"S0 ", "S1 ", "S2 ", "S3 ", "S4 ", "S5 ", "S6 ", "S7 ", "S8 ", "S9 ", "+10", "+20", "+30"};
   // u8g2_SetFont(&u8g2, u8g2_font_9x15_tf);
   // w = u8g2_GetStrWidth(&u8g2, smeter[power_s]);
   // u8g2_SetDrawColor(&u8g2, 0);
   // u8g2_DrawRBox(&u8g2, (128-(w+4))/2, 48, w+4, 14, 2);
   // u8g2_SetDrawColor(&u8g2, 1);
   // u8g2_DrawStr(&u8g2, (128-w)/2, 60, smeter[power_s]);
-  display->drawString(20, 16, font_16x12,smeter[power_s] , COLOUR_FUCHSIA, COLOUR_BLACK);
+  display->drawString(0, 2, font_16x12,smeter[power_s] , COLOUR_FUCHSIA, COLOUR_BLACK);
 
 
   display_show();
@@ -412,6 +428,8 @@ void ui::renderpage_original(rx_status & status, rx & receiver)
 void ui::renderpage_bigspectrum(rx_status & status, rx & receiver)
 {
   display_clear();
+  // display->clear();
+  display->drawString(10,20,font_16x12,"BIG SPECTRUM",COLOUR_FUCHSIA, COLOUR_GREEN);
   draw_slim_status(0, status, receiver);
   draw_h_tick_marks(8);
   draw_spectrum(13, 63);
@@ -423,7 +441,8 @@ void ui::renderpage_bigspectrum(rx_status & status, rx & receiver)
 ////////////////////////////////////////////////////////////////////////////////
 void ui::renderpage_combinedspectrum(bool view_changed, rx_status & status, rx & receiver)
 {
-  if (view_changed) display_clear();
+  if (view_changed) {display_clear();display->clear();}
+  display->drawString(10,20,font_16x12,"COMB. SPECTRUM",COLOUR_FUCHSIA, COLOUR_GREEN);
   ssd1306_fill_rectangle(&disp, 0, 0, 128, 48, 0);
   draw_waterfall(48);
   draw_slim_status(0, status, receiver);
@@ -437,7 +456,8 @@ void ui::renderpage_combinedspectrum(bool view_changed, rx_status & status, rx &
 ////////////////////////////////////////////////////////////////////////////////
 void ui::renderpage_waterfall(bool view_changed, rx_status & status, rx & receiver)
 {
-  if (view_changed) display_clear();
+  if (view_changed) {display_clear();display->clear();}
+  display->drawString(10,20,font_16x12,"WATERFALL",COLOUR_FUCHSIA, COLOUR_GREEN);
   ssd1306_fill_rectangle(&disp, 0, 0, 128, 13, 0);
   draw_waterfall(13);
   draw_h_tick_marks(8);
@@ -460,6 +480,9 @@ void ui::renderpage_status(rx_status & status, rx & receiver)
   receiver.release();
 
   display_clear();
+  // display->clear();
+  display->drawString(10,20,font_16x12,"  STATUS  ",COLOUR_BLUE, COLOUR_RED);
+
   draw_slim_status(0, status, receiver);
 
   u8g2_SetDrawColor(&u8g2, 1);
@@ -474,21 +497,25 @@ void ui::renderpage_status(rx_status & status, rx & receiver)
   y += 10;
   snprintf(buff, buffer_size, "Battery : %2.1fV", battery_voltage);
   u8g2_DrawStr(&u8g2, 0, y, buff);
+  display->drawString(0,y*2,font_16x12,buff,COLOUR_YELLOW, COLOUR_BLACK);
 
   //temp
   y += 10;
   snprintf(buff, buffer_size, "CPU Temp: %2.0f%cC", temp, '\xb0');
   u8g2_DrawStr(&u8g2, 0, y, buff);
+  display->drawString(0,y*2,font_16x12,buff,COLOUR_YELLOW, COLOUR_BLACK);
 
   //cpu load
   y += 10;
   snprintf(buff, buffer_size, "CPU Load: %3.0f%%", (100.0f * busy_time) / block_time);
   u8g2_DrawStr(&u8g2, 0, y, buff);
+  display->drawString(0,y*2,font_16x12,buff,COLOUR_YELLOW, COLOUR_BLACK);
 
   //usb buffer
   y += 10;
   snprintf(buff, buffer_size, "USB Buff: %3d%%", usb_buf_level);
   u8g2_DrawStr(&u8g2, 0, y, buff);
+  display->drawString(0,y*2,font_16x12,buff,COLOUR_YELLOW, COLOUR_BLACK);
 
   display_show();
 }
@@ -503,6 +530,8 @@ void ui::renderpage_fun(bool view_updated, rx_status & status, rx & receiver)
     ym = rand()%10;
   }
   display_clear();
+  display->clear();
+  display->drawString(10,20,font_16x12,"FUN",COLOUR_FUCHSIA, COLOUR_GREEN);  
   ssd1306_bmp_show_image(&disp, crystal, sizeof(crystal));
   ssd1306_scroll_screen(&disp, 40*cos(xm*M_PI*degrees/180), 20*sin(ym*M_PI*degrees/180));
   if ((degrees+=3) >=360) degrees = 0;
@@ -525,6 +554,7 @@ void ui::draw_slim_status(uint16_t y, rx_status & status, rx & receiver)
 
   //signal strength dBm
   display_print_num("% 4ddBm", (int)power_dBm, 1, style_right);
+  printf("slimstatus\r\n");
 }
 
 // draw vertical signal strength
@@ -775,6 +805,8 @@ void ui::draw_spectrum(uint16_t startY, uint16_t endY)
     else if(spectrum_zoom == 4) y = spectrum[112+(x>>2)]/scale;
     smoothed_y = (smoothed_y - (smoothed_y>>smoothing_factor)) + (y>>smoothing_factor);
     ssd1306_draw_line(&disp, x, endY-smoothed_y, x, endY, 1);
+    display->drawLine(x, 50 + startY, x, 50 + endY, COLOUR_BLUE);
+    display->drawLine(x, 50 + endY-smoothed_y, x, 50 + endY, COLOUR_RED);
   }
 
   for (int16_t y = 0; y < max_height; ++y)
@@ -784,6 +816,7 @@ void ui::draw_spectrum(uint16_t startY, uint16_t endY)
       for (uint8_t x = 0; x < 128; x += 4)
       {
         ssd1306_draw_line(&disp, x, endY - y, x + 1, endY - y, 2);
+        display->drawLine(x, 50 + endY - y, x + 1, 50 + endY - y, COLOUR_GREEN);        
       }
     }
   }
@@ -795,7 +828,7 @@ void ui::draw_waterfall(uint16_t starty)
   static int8_t curr_line[WATERFALL_WIDTH];
 
   // Move waterfall down to  make room for the new line
-  ssd1306_scroll_screen(&disp, 0, 1);
+  ssd1306_scroll_screen(&disp, 0, 1); //Check what we can do with ILI
   int16_t err = 0;
 
   for(uint16_t x=0; x<WATERFALL_WIDTH; x++)
@@ -2578,43 +2611,43 @@ bool ui::bands_menu(bool &ok)
 ////////////////////////////////////////////////////////////////////////////////
 bool ui::do_splash()
 {
-  static int step=0;
-  if (step++ >= 20) {  // we're done
-    step = 0;
-    return true;
-  }
+//   static int step=0;
+//   if (step++ >= 20) {  // we're done
+//     step = 0;
+//     return true;
+//   }
 
   display_clear();
-  ssd1306_bmp_show_image(&disp, crystal, sizeof(crystal));
+//   ssd1306_bmp_show_image(&disp, crystal, sizeof(crystal));
 
-  int i=-1;
-#if 0
-// zoom in
-       if (step <= 5) i=0;        // image for 3 tenths
-  else if (step <= 7) i=step-5;
-  else if (step <= 12) i=3;
-  else if (step <= 18) i=step-7;
+//   int i=-1;
+// #if 0
+// // zoom in
+//        if (step <= 5) i=0;        // image for 3 tenths
+//   else if (step <= 7) i=step-5;
+//   else if (step <= 12) i=3;
+//   else if (step <= 18) i=step-7;
 
-#else
-// zoom out
-       if (step <= 6) i=10-step;
-  else if (step <= 11) i=3;
-  else if (step <= 13) i=14-step;
-  else if (step <= 18) i=0;
+// #else
+// // zoom out
+//        if (step <= 6) i=10-step;
+//   else if (step <= 11) i=3;
+//   else if (step <= 13) i=14-step;
+//   else if (step <= 18) i=0;
 
-#endif
+// #endif
 
-  if (i==0) {
-    // do nothing, leave the bitmap
-  } else if (i>0) {
-    display_set_xy(0,(64-i*8)/2); // disp height - text height /2
-    display_print_str("PicoRX",i,style_centered|style_nowrap|style_bordered);
-  } else if (i==-1) {
-    display_clear();
-  }
-  display_show();
-  return false;
-
+//   if (i==0) {
+//     // do nothing, leave the bitmap
+//   } else if (i>0) {
+//     display_set_xy(0,(64-i*8)/2); // disp height - text height /2
+//     display_print_str("PicoRX",i,style_centered|style_nowrap|style_bordered);
+//   } else if (i==-1) {
+//     display_clear();
+//   }
+  // display_show();
+  // return false;
+return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2623,36 +2656,36 @@ bool ui::do_splash()
 void ui::do_ui()
 {
     bool update_settings = false;
-    enum e_ui_state {splash, idle, menu, recall, sleep, memory_scanner, frequency_scanner};
-    static e_ui_state ui_state = splash;
-    static uint8_t display_option = 0;
+    // enum e_ui_state {splash, idle, menu, recall, sleep, memory_scanner, frequency_scanner};
+    //static e_ui_state ui_state = splash;  //Moved to class public
+    //static uint8_t display_option = 0;  //Moved to class public
     const uint8_t num_display_options = 7;
     static bool view_changed = false;
 
-    if(ui_state != idle) view_changed = true;
+    if(ui_state != ui_state_idle) view_changed = true;
     
     //gui is idle, just update the display
-    if(ui_state == splash)
+    if(ui_state == ui_state_splash)
     {
       if(do_splash())
-        ui_state = idle;
+        ui_state = ui_state_idle;
       if(menu_button.is_pressed()||encoder_button.is_pressed()||back_button.is_pressed())
-        ui_state = idle;
+        ui_state = ui_state_idle;
     }
 
     //gui is idle, just update the display
-    else if(ui_state == idle)
+    else if(ui_state == ui_state_idle)
     {
 
       //launch menu or recall
       if(menu_button.is_pressed())
       {
-        ui_state = menu;
+        ui_state = ui_state_menu;
         display_time = time_us_32();
       }
       else if(encoder_button.is_pressed())
       {
-        ui_state = recall;
+        ui_state = ui_state_recall;
         display_time = time_us_32();
       }
       else if(back_button.is_pressed())
@@ -2661,7 +2694,7 @@ void ui::do_ui()
         display_option++;
         if(display_option==num_display_options){
           display_option = 0;
-          ui_state = memory_scanner;
+          ui_state = ui_state_memory_scanner;
         }
       }
 
@@ -2731,67 +2764,67 @@ void ui::do_ui()
     }
 
     //menu is active, if menu completes update settings
-    else if(ui_state == menu)
+    else if(ui_state == ui_state_menu)
     {
       bool ok = false;
       if(main_menu(ok))
       {
-        ui_state = idle;
+        ui_state = ui_state_idle;
         update_settings = ok;
         display_time = time_us_32();
       }
     }
 
     //push button enters recall menu directly
-    else if(ui_state == recall)
+    else if(ui_state == ui_state_recall)
     {
       bool ok = false;
       if(ui::memory_recall(ok))
       {
-        ui_state = idle;
+        ui_state = ui_state_idle;
         update_settings = ok;
         display_time = time_us_32();
       }
     }
 
     //enter scanner mode
-    else if(ui_state == memory_scanner)
+    else if(ui_state == ui_state_memory_scanner)
     {
       bool ok = false;
       if(memory_scan(ok))
       {
-        ui_state = frequency_scanner;
+        ui_state = ui_state_frequency_scanner;
         display_time = time_us_32();
       }
     }
 
     //enter scanner mode
-    else if(ui_state == frequency_scanner)
+    else if(ui_state == ui_state_frequency_scanner)
     {
       bool ok = false;
       if(frequency_scan(ok))
       {
-        ui_state = idle;
+        ui_state = ui_state_idle;
         display_time = time_us_32();
       }
     }
 
     //if display times out enter sleep mode
-    else if(ui_state == sleep)
+    else if(ui_state == ui_state_sleep)
     {
       if(menu_button.is_pressed() || encoder_button.is_pressed() || back_button.is_pressed() || get_encoder_change())
       {
         display_time = time_us_32();
         u8g2_SetPowerSave(&u8g2, 0);
         // waterfall_inst.powerOn(1);
-        ui_state = idle;
+        ui_state = ui_state_idle;
       }
     }
 
     //automatically switch off display after a period of inactivity
-    if(ui_state == idle && display_timeout_max && (time_us_32() - display_time) > display_timeout_max)
+    if(ui_state == ui_state_idle && display_timeout_max && (time_us_32() - display_time) > display_timeout_max)
     {
-      ui_state = sleep;
+      ui_state = ui_state_sleep;
       u8g2_SetPowerSave(&u8g2, 1);
       // waterfall_inst.powerOn(0);
     }

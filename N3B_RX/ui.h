@@ -95,6 +95,8 @@ const uint8_t PIN_DISPLAY_SCL = 17;//19;
 
 enum e_button_state {idle, slow_mode, fast_mode, very_fast_mode, menu, volume, mode};
 
+enum e_ui_state {ui_state_splash, ui_state_idle, ui_state_menu, ui_state_recall, ui_state_sleep, ui_state_memory_scanner, ui_state_frequency_scanner};
+
 // scanner
 enum e_scanner_squelch {no_squelch, no_signal, signal_found, count_down};
 
@@ -262,6 +264,9 @@ class ui
   void update_spectrum(rx &receiver, rx_settings &settings, rx_status &status, uint8_t spectrum[], uint8_t dB10);
   // ui(rx_settings & settings_to_apply, rx_status & status, rx &receiver, uint8_t *spectrum, uint8_t &dB10, waterfall &waterfall_inst);
   ui(rx_settings & settings_to_apply, rx_status & status, rx &receiver, uint8_t *ilispectrum, uint8_t &dB10);
+  uint8_t display_option = 0;
+  e_ui_state ui_state = ui_state_splash;
+
 
 };
 

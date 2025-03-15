@@ -65,7 +65,7 @@ int main()
       process_cat_control(settings_to_apply, status, receiver, user_interface.get_settings());
     }
 
-    user_interface.update_spectrum(receiver, settings_to_apply, status, spectrum, dB10);
+    if ((user_interface.ui_state == ui_state_idle) && (user_interface.display_option == 0)) user_interface.update_spectrum(receiver, settings_to_apply, status, spectrum, dB10);
     // waterfall_inst.update_spectrum(receiver, settings_to_apply, status, spectrum, dB10);
 
   }
