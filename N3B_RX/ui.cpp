@@ -140,7 +140,6 @@ void ui::display_print_char(char x, uint32_t scale, uint32_t style)
   int colour = 1;
   if (style & style_reverse) colour=0;
   if (style & style_xor) colour=2;
-  printf(".%c",x);
   if (scale & 0x01) { // odd numbers use 8x6 chars
     ssd1306_draw_char_with_font(&disp, cursor_x, cursor_y, scale, font_8x5, x, colour);
     // display->drawString(cursor_x, cursor_y, font_8x5, &x, colour, COLOUR_BLACK);
@@ -263,17 +262,18 @@ void ui::display_draw_volume(uint8_t v, uint8_t x)
 {
   const uint16_t mute_icon[15] = {0x0, 0xa, 0x1a, 0x38, 0x78, 0x6f8, 0x6f8, 0x6f8, 0x7f8, 0x6f8, 0x478, 0x838, 0x1018, 0x8, 0x0};
   const uint8_t scaled_volume = (v+5)*12/9;
-  display->fillRect(x, 38, 12, 16, display->colour565(0,0,0));
+  display->fillRect(x, 100, x+12, 113, display->colour565(0,0,0));
   if (v == 0)
   {
-    display_draw_icon(x, 50-13, 16, 15, mute_icon);
+    // display_draw_icon(x, 50-13, 16, 15, mute_icon);
+    display_draw_icon(0, 100, 16, 15, mute_icon);
   }
   else
   {
     for (uint8_t i = 0; i < 16; i++)
     {
       uint8_t h = i * 12/16;
-      if(scaled_volume >= i) display->drawLine(x + i, 50-h, x+i, 50,display->colour565(0,255,200));//u8g2_DrawVLine(&u8g2, x + i, 13-h, h);
+      if(scaled_volume >= i) display->drawLine(x + i, 113-h, x+i, 113,display->colour565(0,255,200));//u8g2_DrawVLine(&u8g2, x + i, 13-h, h);
     }
   }
 }
@@ -341,8 +341,10 @@ void ui::renderpage_original(rx_status & status, rx & receiver)
   const uint8_t buffer_size = 21;
   char buff [buffer_size];
   display_clear();
+  // display->clear();
+  // draw();
 
-  //frequency
+  // frequency
   uint32_t remainder, MHz, kHz, Hz;
   MHz = (uint32_t)settings[idx_frequency]/1000000u;
   remainder = (uint32_t)settings[idx_frequency]%1000000u; 
@@ -362,11 +364,12 @@ void ui::renderpage_original(rx_status & status, rx & receiver)
   u8g2_DrawBox(&u8g2, 90, 29, 3, 3);
 
 
-  //mode
-  // const uint8_t text_height = 14u;
-  // u8g2_SetFont(&u8g2, u8g2_font_9x15_tf);
-  // u8g2_DrawStr(&u8g2, 0, text_height, modes[settings[idx_mode]]);
-  uint16_t x = 0;//u8g2_GetStrWidth(&u8g2, modes[0]) + 2;
+  // mode
+  const uint8_t text_height = 14u;
+  u8g2_SetFont(&u8g2, u8g2_font_9x15_tf);
+  u8g2_DrawStr(&u8g2, 0, text_height, modes[settings[idx_mode]]);
+  uint16_t x = 0;
+  // u8g2_GetStrWidth(&u8g2, modes[0]);
 
   //volume
   display_draw_volume(settings[idx_volume], x);
@@ -379,13 +382,13 @@ void ui::renderpage_original(rx_status & status, rx & receiver)
   snprintf(buff, buffer_size, "% 4ddBm", (int)power_dBm);
   // uint16_t w = u8g2_GetStrWidth(&u8g2, buff);
   // u8g2_DrawStr(&u8g2, 127-w, text_height, buff);
-  display->drawString(227, 16, font_16x12, buff , COLOUR_WHITE, COLOUR_BLACK);
+  display->drawString(0, 160, font_8x5, buff , COLOUR_WHITE, COLOUR_BLACK);
 
   //step size
   // u8g2_SetFont(&u8g2, u8g2_font_7x14_tf);
   // w = u8g2_GetStrWidth(&u8g2, steps[settings[idx_step]]);
   // u8g2_DrawStr(&u8g2, 127 - w, 42, steps[settings[idx_step]]);
-  display->drawString(0, 16, font_16x12,steps[settings[idx_step]] , COLOUR_WHITE, COLOUR_BLACK);
+  // display->drawString(0, 16, font_16x12,steps[settings[idx_step]] , COLOUR_WHITE, COLOUR_BLACK);
 
 
   int8_t power_s = dBm_to_S(power_dBm);
@@ -416,7 +419,7 @@ void ui::renderpage_original(rx_status & status, rx & receiver)
   // u8g2_DrawRBox(&u8g2, (128-(w+4))/2, 48, w+4, 14, 2);
   // u8g2_SetDrawColor(&u8g2, 1);
   // u8g2_DrawStr(&u8g2, (128-w)/2, 60, smeter[power_s]);
-  display->drawString(0, 2, font_16x12,smeter[power_s] , COLOUR_FUCHSIA, COLOUR_BLACK);
+  display->drawString(0, 180, font_8x5,smeter[power_s] , COLOUR_FUCHSIA, COLOUR_BLACK);
 
 
   display_show();
@@ -554,7 +557,6 @@ void ui::draw_slim_status(uint16_t y, rx_status & status, rx & receiver)
 
   //signal strength dBm
   display_print_num("% 4ddBm", (int)power_dBm, 1, style_right);
-  printf("slimstatus\r\n");
 }
 
 // draw vertical signal strength
@@ -2265,7 +2267,7 @@ bool ui::configuration_menu(bool &ok)
     //chose menu item
     if(ui_state == select_menu_item)
     {
-      if(menu_entry("HW Config", "Display\nTimeout#Regulator\nMode#Reverse\nEncoder#Encoder\nResolution#Swap IQ#Gain Cal#Freq Cal#Flip OLED#OLED Type#Display\nContrast#TFT\nSettings#TFT Colour#Bands#USB\nUpload#", &menu_selection, ok))
+      if(menu_entry("HW Config", "Display\nTimeout#Regulator\nMode#Reverse\nEncoder#Encoder\nResolution#Swap IQ#Gain Cal#Freq Cal#Flip OLED#OLED Type#Display\nContrast#TFT\nSettings#TFT Colour#USB\nUpload#", &menu_selection, ok))
       {
         if(ok) 
         {
@@ -2376,11 +2378,7 @@ bool ui::configuration_menu(bool &ok)
           break;
 	  }
 
-        case 12:
-          done = bands_menu(ok);
-          break;
-
-        case 13: 
+        case 12: 
           setting_word = 0;
           enumerate_entry("USB Upload", "Back#Memory#Firmware#", &setting_word, ok, changed);
           if(setting_word==1) {
@@ -2520,94 +2518,6 @@ bool ui::main_menu(bool & ok)
     return false;
 }
 
-bool ui::bands_menu(bool &ok)
-{
-    enum e_ui_state {select_menu_item, menu_item_active};
-    static e_ui_state ui_state = select_menu_item;
-    static uint32_t menu_selection = 0;
-
-    //chose menu item
-    if(ui_state == select_menu_item)
-    {
-      if(menu_entry("Bands", "Band 1#Band 2#Band 3#Band 4#Band 5#Band 6#Band 7#", &menu_selection, ok))
-      {
-        if(ok) 
-        {
-          //ok button pressed, more work to do
-          ui_state = menu_item_active;
-          return false;
-        }
-        else
-        {
-          //cancel button pressed, done with menu
-          menu_selection = 0;
-          ui_state = select_menu_item;
-          return true;
-        }
-      }
-    }
-
-    //menu item active
-    else if(ui_state == menu_item_active)
-    {
-       bool done = false;
-       bool changed = false;
-       uint32_t band_settings;
-       switch(menu_selection)
-        {
-          case 0 :
-            band_settings = settings[idx_band1] & 0xff;
-            done = number_entry("Band 1 <=", "%ikHz", 0, 255, 125, (int32_t*)&band_settings, ok, changed);
-            settings[idx_band1] &= 0xffffff00;
-            settings[idx_band1] |= band_settings;
-            break;
-          case 1 : 
-            band_settings = (settings[idx_band1] >> 8) & 0xff;
-            done = number_entry("Band 2 <=", "%ikHz", 0, 255, 125, (int32_t*)&band_settings, ok, changed);
-            settings[idx_band1] &= 0xffff00ff;
-            settings[idx_band1] |= band_settings << 8;
-            break;
-          case 2 :  
-            band_settings = (settings[idx_band1] >> 16) & 0xff;
-            done = number_entry("Band 3 <=", "%ikHz", 0, 255, 125, (int32_t*)&band_settings, ok, changed);
-            settings[idx_band1] &= 0xff00ffff;
-            settings[idx_band1] |= band_settings << 16;
-            break;
-          case 3 : 
-            band_settings = (settings[idx_band1] >> 24) & 0xff;
-            done = number_entry("Band 4 <=", "%ikHz", 0, 255, 125, (int32_t*)&band_settings, ok, changed);
-            settings[idx_band1] &= 0x00ffffff;
-            settings[idx_band1] |= band_settings << 24;
-            break;
-          case 4 :
-            band_settings = settings[idx_band2] & 0xff;
-            done = number_entry("Band 5 <=", "%ikHz", 0, 255, 125, (int32_t*)&band_settings, ok, changed);
-            settings[idx_band1] &= 0xffffff00;
-            settings[idx_band1] |= band_settings;
-            break;
-          case 5 : 
-            band_settings = (settings[idx_band2] >> 8) & 0xff;
-            done = number_entry("Band 6 <=", "%ikHz", 0, 255, 125, (int32_t*)&band_settings, ok, changed);
-            settings[idx_band1] &= 0xffff00ff;
-            settings[idx_band1] |= band_settings << 8;
-            break;
-          case 6 :  
-            band_settings = (settings[idx_band2] >> 16) & 0xff;
-            done = number_entry("Band 7 <=", "%ikHz", 0, 255, 125, (int32_t*)&band_settings, ok, changed);
-            settings[idx_band1] &= 0xff00ffff;
-            settings[idx_band1] |= band_settings << 16;
-            break;
-        }
-        if(done)
-        {
-          menu_selection = 0;
-          ui_state = select_menu_item;
-          return true;
-        }
-    }
-
-    return false;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 // This is the startup animation
@@ -2683,6 +2593,7 @@ void ui::do_ui()
       //launch menu or recall
       if(menu_button.is_pressed())
       {
+        display->clear();
         ui_state = ui_state_menu;
         display_time = time_us_32();
       }
@@ -2694,6 +2605,7 @@ void ui::do_ui()
       else if(back_button.is_pressed())
       {
         view_changed = true;
+        display->clear();
         display_option++;
         if(display_option==num_display_options){
           display_option = 0;
@@ -2740,6 +2652,7 @@ void ui::do_ui()
           //normal tuning
           else
             settings[idx_frequency] += encoder_change * step_sizes[settings[idx_step]];
+      printf("frq : %lu %lu %lu\r\n",settings[idx_frequency], settings[idx_min_frequency] , settings[idx_max_frequency]);
 
           //wrap frequency at band limits
           if (settings[idx_frequency] > settings[idx_max_frequency])
@@ -3070,26 +2983,27 @@ void ui::powerOn(bool state)
 
 void ui::draw()
 {
-    display->clear();
+  display->clear();
+  display->clear();
 
     //draw borders
     //Horizontal
-    display->drawLine(31, 135, 288, 135, display->colour565(255,255,255));
-    display->drawLine(31, 122, 288, 122, display->colour565(255,255,255));
-    display->drawLine(31,  30, 288,  30, display->colour565(255,255,255));
-    display->drawLine(31, 239, 288, 239, display->colour565(255,255,255));
-    display->drawLine(292, 30, 319,  30, display->colour565(255,255,255));
-    display->drawLine(292,239, 319, 239, display->colour565(255,255,255));
+    display->drawLine(61,  30, 319,  30, display->colour565(255,255,255)); //scope top
+    display->drawLine(62, 122, 319, 122, display->colour565(255,255,255)); //scope bottom
+    display->drawLine(62, 146, 319, 146, display->colour565(255,255,255)); //waterfall top
+    display->drawLine(62, 239, 319, 239, display->colour565(255,255,255)); //waterfall bottom
+    // display->drawLine(292, 30, 319,  30, display->colour565(255,255,255)); //smeter top
+    // display->drawLine(292,239, 319, 239, display->colour565(255,255,255)); //smeter bottom
  // display->drawLine(0,   30,  27,  30, display->colour565(255,255,255));
  // display->drawLine(0,  239,  27, 239, display->colour565(255,255,255));
 
     //Vertical
-    display->drawLine(31,  30, 31,  122, display->colour565(255,255,255));
-    display->drawLine(288, 30, 288, 122, display->colour565(255,255,255));
-    display->drawLine(31,  135, 31,  239, display->colour565(255,255,255));
-    display->drawLine(288, 135, 288, 239, display->colour565(255,255,255));
-    display->drawLine(292, 30, 292, 239, display->colour565(255,255,255));
-    display->drawLine(319, 30, 319, 239, display->colour565(255,255,255));
+    display->drawLine(62,  30, 62,  122, display->colour565(255,255,255)); //scope left
+    display->drawLine(319, 30, 319, 122, display->colour565(255,255,255)); //scope right
+    display->drawLine(62,  146, 62, 239, display->colour565(255,255,255)); //waterfall left
+    display->drawLine(319, 146,319, 239, display->colour565(255,255,255)); //waterfall right
+    // display->drawLine(292, 30, 292, 239, display->colour565(255,255,255)); //smeter left
+    // display->drawLine(319, 30, 319, 239, display->colour565(255,255,255)); //smeter right
     // display->drawLine(0,   30, 0,   239, display->colour565(255,255,255));
     // display->drawLine(27,  30, 27,  239, display->colour565(255,255,255));
 
@@ -3098,17 +3012,16 @@ void ui::draw()
     {
       if((fbin-128)%42==0)
       {
-        display->drawLine(32+fbin, 122, 32+fbin, 123, COLOUR_WHITE);
+        display->drawLine(63+fbin, 121, 63+fbin, 124, COLOUR_WHITE);
       }
     }
-    display->drawString(29,  127, font_8x5, "-15", COLOUR_WHITE, COLOUR_BLACK);
-    display->drawString(70,  127, font_8x5, "-10", COLOUR_WHITE, COLOUR_BLACK);
-    display->drawString(111, 127, font_8x5, "-5",  COLOUR_WHITE, COLOUR_BLACK);
-    display->drawString(154, 127, font_8x5, "-0",  COLOUR_WHITE, COLOUR_BLACK);
-    display->drawString(199, 127, font_8x5, "5",   COLOUR_WHITE, COLOUR_BLACK);
-    display->drawString(238, 127, font_8x5, "10",  COLOUR_WHITE, COLOUR_BLACK);
-    display->drawString(279, 127, font_8x5, "15",  COLOUR_WHITE, COLOUR_BLACK);
-
+    display->drawString(61,  127, font_16x12, "-15", COLOUR_WHITE, COLOUR_BLACK);
+    display->drawString(102, 127, font_16x12, "-10", COLOUR_WHITE, COLOUR_BLACK);
+    display->drawString(143, 127, font_16x12, "-5",  COLOUR_WHITE, COLOUR_BLACK);
+    display->drawString(186, 127, font_16x12, "0",  COLOUR_WHITE, COLOUR_BLACK);
+    display->drawString(225, 127, font_16x12, "5",   COLOUR_WHITE, COLOUR_BLACK);
+    display->drawString(265, 127, font_16x12, "10",  COLOUR_WHITE, COLOUR_BLACK);
+    display->drawString(300, 127, font_16x12, "15",  COLOUR_WHITE, COLOUR_BLACK);
 }
 
 uint16_t ui::heatmap(uint8_t value, bool blend, bool highlight)
@@ -3208,17 +3121,16 @@ void ui::update_spectrum(rx &receiver, rx_settings &settings, rx_status &status,
     if(!power_state) return;
 
     const uint16_t waterfall_height = 90u;
-    const uint16_t waterfall_x = 32u;
-    const uint16_t waterfall_y = 146u;
+    const uint16_t waterfall_x = 63u;
+    const uint16_t waterfall_y = 147u;
     const uint16_t num_cols = 256u;
     const uint16_t scope_height = 90u;
-    const uint16_t scope_x = 32u;
+    const uint16_t scope_x = 63u;
     const uint16_t scope_y = 31u;
     const uint16_t scope_fg = display->colour565(255, 255, 255);
 
     enum FSM_states{
       update_waterfall,
-      draw_smeter,
       draw_status,
       draw_waterfall, 
       draw_scope, 
@@ -3245,54 +3157,8 @@ void ui::update_spectrum(rx &receiver, rx_settings &settings, rx_status &status,
 
       if(refresh) refresh_started = true;
 
-      FSM_state = draw_smeter;
-
-    } else if(FSM_state == draw_smeter ){
-
-      const uint16_t smeter_height = 237-53;
-      const uint16_t smeter_width = 24;
-
-      receiver.access(false);
-      const int16_t power_dBm = status.signal_strength_dBm;
-      receiver.release();
-
-      static float filtered_power = power_dBm;
-      filtered_power = (filtered_power * 0.7) + (power_dBm * 0.3);
-
-      static float last_filtered_power = 0;
-      static uint8_t last_squelch = 255;
-      if(abs(filtered_power - last_filtered_power) > 1 || settings.squelch != last_squelch|| refresh)
-      {
-        last_filtered_power = filtered_power;
-        last_squelch = settings.squelch;
-        uint16_t power_px = dBm_to_px(filtered_power, smeter_height);
-        uint16_t squelch_px = dBm_to_px(S_to_dBm(settings.squelch), smeter_height);
-
-        uint16_t colour=heatmap(dBm_to_px(filtered_power, 255));
-        display->fillRect(294, 43+smeter_height-power_px, power_px, smeter_width, colour);
-        display->fillRect(294, 43, smeter_height-power_px, smeter_width, COLOUR_BLACK);
-        display->drawLine(294, 43+smeter_height-squelch_px, 316, 43+smeter_height-squelch_px, COLOUR_WHITE);
-
-        char buffer[9];
-        snprintf(buffer, 9, "%4.0fdBm", filtered_power);
-        display->drawString(236, 0, font_16x12, buffer, COLOUR_FUCHSIA, COLOUR_BLACK);
-
-        uint16_t power_s = dBm_to_S2(filtered_power);
-        if(power_s >= 0 && power_s <= 9)
-        {
-          snprintf(buffer, 9, "S%1u", power_s);
-          display->drawString(293, 32, font_16x12, buffer, COLOUR_WHITE, COLOUR_BLACK);
-          display->drawString(296, 48, font_8x5, "   ", COLOUR_WHITE, COLOUR_BLACK);
-        }
-        else
-        {
-          display->drawString(293, 32, font_16x12, "S9", COLOUR_WHITE, COLOUR_BLACK);
-          snprintf(buffer, 9, "+%1u", (power_s-9)*10);
-          display->drawString(296, 48, font_8x5, buffer, COLOUR_WHITE, COLOUR_BLACK);
-        }
-      }
-
       FSM_state = draw_status;
+
     } else if(FSM_state == draw_status){
 
       static int16_t last_mode = -1;
@@ -3300,7 +3166,7 @@ void ui::update_spectrum(rx &receiver, rx_settings &settings, rx_status &status,
       {
         last_mode = settings.mode;
         const char modes[6][4]  = {"AM ", "AMS", "LSB", "USB", "FM ", "CW "};
-        display->drawString(220, 13, font_16x12, modes[settings.mode], COLOUR_FUCHSIA, COLOUR_BLACK);
+        display->drawString(280, 10, font_16x12, modes[settings.mode], COLOUR_FUCHSIA, COLOUR_BLACK);
       }
 
       FSM_state = draw_waterfall;
@@ -3391,8 +3257,8 @@ void ui::update_spectrum(rx &receiver, rx_settings &settings, rx_status &status,
       if(lastMHz!=MHz || lastkHz!=kHz || lastHz!=Hz || refresh)
       {
         char buffer[20];
-        snprintf(buffer, 20, "%2lu.%03lu.%03lu", MHz, kHz, Hz);
-        display->drawString(100, 0, font_16x12, buffer, COLOUR_WHITE, COLOUR_BLACK);
+        snprintf(buffer, 20, "10.%2lu.%03lu.%03lu", MHz, kHz, Hz);
+        display->drawString(80, 10, font_16x12, buffer, COLOUR_WHITE, COLOUR_BLACK);
         lastMHz = MHz;
         lastkHz = kHz;
         lastHz = Hz;
