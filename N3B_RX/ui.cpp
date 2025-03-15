@@ -954,6 +954,7 @@ bool ui::menu_entry(const char title[], const char options[], uint32_t *value, b
   if(draw_display)
   {
       display_clear();
+      display->clear();
       display_print_str(title, 2, style_centered);
       display_draw_separator(18,3);
       display_linen(4);
@@ -1010,6 +1011,7 @@ bool ui::enumerate_entry(const char title[], const char options[], uint32_t *val
   if(draw_display)
   {
       display_clear();
+      display->clear();
       display_print_str(title, 2, style_centered);
       display_draw_separator(40,1);
       display_linen(6);
@@ -1058,6 +1060,7 @@ bool ui::number_entry(const char title[], const char format[], int16_t min, int1
   if(draw_display)
   {
       display_clear();
+      display->clear();
       display_print_str(title, 2, style_centered);
       display_draw_separator(40,1);
       display_linen(6);
