@@ -147,16 +147,19 @@ void rx::apply_settings()
    {
 
       //apply frequency
+      //Frequency is 489XX instead of 10489, we omit 10 GHz  because its a big constant
       tuned_frequency_Hz = settings_to_apply.tuned_frequency_Hz;
-      printf("FR_: %lf\r\n",tuned_frequency_Hz);
       //apply frequency calibration
       tuned_frequency_Hz *= 1e6/(1e6+settings_to_apply.ppm);
+      double freq_to_adf = (tuned_frequency_Hz + 250000000) * 2; //(diff between 739 and 489 is 250 MHz)
 
       uint32_t system_clock_rate = 125000000;
       // nco_frequency_Hz = nco_set_frequency(pio, sm, tuned_frequency_Hz, system_clock_rate);
-      printf("FRQ: %lf\r\n",tuned_frequency_Hz);
-      // adf4360_evaluate(777000);
-      offset_frequency_Hz = tuned_frequency_Hz - 489777000;// - nco_frequency_Hz;
+      printf("FRTuned: %lf\r\n",tuned_frequency_Hz);
+      printf("FRAdf  : %lf\r\n",freq_to_adf);
+      double adf_frequency = ADF4360_SetFrequency(freq_to_adf);      
+      printf("FRQ ret: %lf\r\n",adf_frequency);
+      offset_frequency_Hz = (freq_to_adf - adf_frequency) / 2; // ADF output is dividev by 2 in IQ demodulator
       printf("offset = %f\r\n",offset_frequency_Hz);
       
       //apply pwm_max

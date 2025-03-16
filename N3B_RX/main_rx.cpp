@@ -46,8 +46,11 @@ int main()
   uint32_t last_ui_update = 0;
   uint32_t last_cat_update = 0;
 
-  adf4360_init();
-
+  // adf4360_init_old();
+  ADF4360_Init_new(ADF4360_4);
+  ADF4360_SetFrequency(1400000000);
+                       
+  
   while(1)
   {
     //schedule tasks

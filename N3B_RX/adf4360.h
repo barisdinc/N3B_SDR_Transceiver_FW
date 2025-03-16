@@ -7,11 +7,63 @@
 #define ADF_DAT 15
 // #define ADF_MUX 28
 
-
 #define CRYSTAL 10000 //10MHz 10000KHz
 #define PFD     10   //500KHz
 #define R_COUNTER (CRYSTAL)/(PFD)
- 
+
+
+/* ADF4360 part versions */
+#define ADF4360_0       0
+#define ADF4360_1       1
+#define ADF4360_2       2
+#define ADF4360_3       3
+#define ADF4360_4       4
+#define ADF4360_5       5
+#define ADF4360_6       6
+#define ADF4360_7       7
+#define ADF4360_8       8
+#define ADF4360_9       9
+
+
+/* ADF4360 latch control bits  */
+#define ADF4360_REG_CONTROL     	    0
+#define ADF4360_REG_R_COUNTER		    1
+#define ADF4360_REG_N_COUNTER		    2
+
+/* Control Latch bits */
+#define ADF4360_CTRL_PRESCALE(x)	    ((0x3 & (x)) << 22)
+#define ADF4360_CTRL_PWR_DWN(x)	        ((0x3 & (x)) << 20)
+#define ADF4360_CTRL_CURRENT1(x)        ((0x7 & (x)) << 17)
+#define ADF4360_CTRL_CURRENT2(x)        ((0x7 & (x)) << 14)
+#define ADF4360_CTRL_OUT_PWR_LVL(x)     ((0x3 & (x)) << 12)
+#define ADF4360_CTRL_MTLD   			(1 << 11)
+#define ADF4360_CTRL_CP_GAIN   	   	    (1 << 10)
+#define ADF4360_CTRL_CP_THREE_STATE 	(1 << 9)
+#define ADF4360_CTRL_PHASE_DETECT_POL	(1 << 8)
+#define ADF4360_CTRL_MUXOUT(x)     		((0x7 & (x)) << 5)
+#define ADF4360_CTRL_COUNTER_RESET		(1 << 4)
+#define ADF4360_CTRL_CORE_POWER(x)  	((0x3 & (x)) << 2)
+
+
+
+
+/******************************************************************************/
+/************************ Functions Declarations ******************************/
+/******************************************************************************/
+
+/*! Initialize the device. */
+unsigned char ADF4360_Init_new(char adf4360Version);
+
+/*! Write data into a register. */
+void ADF4360_Write(unsigned long data);
+
+/*! Powers down or powers up the device. */
+void ADF4360_Power(unsigned char powerMode);
+
+/*! Sets the ADF4360 frequency. */
+unsigned long long ADF4360_SetFrequency(unsigned long long frequency);
+
+
 typedef struct
 {
 	uint32_t freq;		// type can hold up to 4GHz
@@ -41,8 +93,8 @@ typedef struct
 extern vfo_t vfo[1];	// vfo[0] is for RX and vfo[1] is TX, which is on TX board
 
 
-void adf4360_init(void);
-// void adf4360_evaluate(uint32_t freq);
+void adf4360_init_old(void);
+void adf4360_evaluate(double freq);
 void adf4360_evaluate(double freq);
 
 #define FREQ_RX_MAX 999990
@@ -56,6 +108,145 @@ void adf4360_evaluate(double freq);
 #define ADF4360_SETPHASE(i, p)	if (((i)>=0)&&((i)<2)) {vfo[(i)].phase = ((uint8_t)p)&3; vfo[(i)].flag = 1;}
 
 
+
+/* ADF4360_CTRL_PRESCALE(x) options. */
+#define ADF4360_PRESCALE_8_9		    0
+#define ADF4360_PRESCALE_16_17		    1
+#define ADF4360_PRESCALE_32_33		    2
+
+/* ADF4360_CTRL_PWR_DWN(x) options. */  
+#define ADF4360_PWR_NORMAL_OPERATION        0
+#define ADF4360_PWR_ASYNCH_POWER_DOWN       1
+#define ADF4360_PWR_SYNCH_POWER_DOWN        3
+
+/* ADF4360_CTRL_OUT_PWR_LVL(x) options. */ 
+#define ADF4360_OUT_POWER_3_5   		0
+#define ADF4360_OUT_POWER_5_0           1
+#define ADF4360_OUT_POWER_7_5           2
+#define ADF4360_OUT_POWER_11_0		    3
+
+/* #define ADF4360_CTRL_MUXOUT(x) options. */
+#define ADF4360_MUX_THREE_STATE         0
+#define ADF4360_MUX_DIGITAL_LD          1
+#define ADF4360_MUX_N_DIVIDER           2
+#define ADF4360_MUX_DVDD                3
+#define ADF4360_MUX_R_DIVIDER           4
+#define ADF4360_MUX_N_LD                5
+#define ADF4360_MUX_SERIAL_DATA         6
+#define ADF4360_MUX_DGND                7
+
+/* ADF4360_CTRL_CORE_POWER(x) options. */ 
+#define ADF4360_CORE_POWER_5     		0
+#define ADF4360_CORE_POWER_10    		1
+#define ADF4360_CORE_POWER_15    		2
+#define ADF4360_CORE_POWER_20    		3
+
+/* N Counter Latch bits */
+#define ADF4360_N_CNT_DIVIDE_2_SELECT	    (1 << 23)
+#define ADF4360_N_CNT_DIVIDE_2              (1 << 22)
+#define ADF4360_N_CNT_CP_GAIN               (1 << 21)
+#define ADF4360_N_CNT_B_COUNTER(x)		    ((0x1FFF & (x)) << 8)
+#define ADF4360_N_CNT_A_COUNTER(x)		    ((0x1F & (x)) << 2) 
+
+/* R Counter Latch bits */
+#define ADF4360_R_CNT_BAND_CLK(x)       	((0x3 & (x)) << 20)
+#define ADF4360_R_CNT_TEST		    		(1 << 19)
+#define ADF4360_R_CNT_LD_PRECISION	    	(1 << 18)
+#define ADF4360_R_CNT_ANTIBACKLASH(x)     	((0x3 & (x)) << 16)
+#define ADF4360_R_CNT_REF_COUNTER(x)        ((0x3FFF & (x)) << 2) 
+
+/* ADF4360_R_CNT_BAND_CLK(x) options. */ 
+#define ADF4360_BAND_DIVIDER_1			0
+#define ADF4360_BAND_DIVIDER_2			1
+#define ADF4360_BAND_DIVIDER_4			2
+#define ADF4360_BAND_DIVIDER_8			3
+
+/* ADF4360 Specifications */
+#define ADF4360_MAX_FREQ_PFD            10000 //8000000 // Hz
+
+
+/*****************************************************************************/
+/************************** Types Declarations *******************************/
+/*****************************************************************************/
+/**
+ * struct ADF4360_Specifications - Stores the minimum or maximum values that 
+ *                                 reflect the performance of a device version.
+ *
+ * @ vcoMinFreq: Minimum frequency that the VCO can output.
+ * @ vcoMaxFreq: Maximum frequency that the VCO can output.
+ * @ countersMaxFreq: The maximum frequency that can be applied to A and B 
+ *                    counters.
+ * @ maxPrescalerVal: The maximum value of the dual-modulus prescaler. Some 
+ *                    versions of the device do not have a prescaler, therefore 
+ *                    the maximum value of the prescaler is set to 1.
+ */
+struct ADF4360_Specifications
+{
+    unsigned long long vcoMinFreq;
+    unsigned long long vcoMaxFreq;
+    unsigned long      countersMaxFreq;
+    unsigned char      maxPrescalerVal;
+};
+
+/**
+ * struct ADF4360_InitialSettings - Stores the settings that will be written to
+ *        the device when the "ADF4360_Init" function is called.
+ *
+ * @ refIn: Input Reference Frequency. Maximum value accepted 250000000 Hz.
+ * @ powerDownMode: Provides programmable power-down modes. Range 0..3
+ * @ currentSetting2: Charge Pump Currents. Range 0..7
+ * @ currentSetting1: Charge Pump Currents. Range 0..7
+ * @ outPowerLevel: Set the output power level of the VCO. Range 0..3
+ * @ muteTillLd: Mute-till-lock detect bit:
+ *                  0 - functions disabled;
+ *                  1 - RF outputs are not switched until PLL is locked.
+ * @ cpGain: Charge pump gain bit:
+ *              0 - Current Settings 1 is used;
+ *              1 - Current Settings 2 is used.
+ * @ cpThreeState: Charge Pump Three-State:
+ *                    0 - normal operation;
+ *                    1 - Puts the charge pump into three-state mode.
+ * @ muxControl: Allows the user to access various internal points on the chip.
+ *               Range 0..7
+ * @ corePowerLevel: Sets the power level in the VCO core. Range 0..3
+ * @ divideBy2Select: Divide-by-2 select bit:
+ *                     0 - the fundamental is used as the prescaler input;
+ *                     1 - divide-by-2 output is selected as the prescaler input
+ * @ divideBy2: Divide-by-2 bit: 
+ *                 0 - normal operation occurs;
+ *                 1 - the output divide-by-2 functions is chosen.
+ * @ lockDetectPrecision: Lock detect precision bit. Sets the number of 
+ *                        reference cycles with less than 15 ns phase error for 
+ *                        entering the locked state:
+ *                           0 -  three cycles are taken;
+ *                           1 -  five cycles are taken.
+ * @ antiBacklash: Sets the antibacklash pulse width. Range 0..3.
+ */
+struct ADF4360_InitialSettings
+{
+    unsigned long  refIn;
+    
+    /* Control Latch */
+    unsigned char preScalerMode;
+    unsigned char powerDownMode;
+    unsigned char currentSetting2;
+    unsigned char currentSetting1;
+    unsigned char outPowerLevel;
+    unsigned char muteTillLd;
+    unsigned char cpGain;
+    unsigned char cpThreeState;
+    unsigned char phaseDetectPol;
+    unsigned char muxControl;
+    unsigned char corePowerLevel;
+    
+    /* N Counter Latch */
+    unsigned char divideBy2Select; // Not available for ADF4360-8 and ADF4360-9
+    unsigned char divideBy2;       // Not available for ADF4360-8 and ADF4360-9
+    
+    /* R Counter Latch */
+    unsigned char lockDetectPrecision;
+    unsigned char antiBacklash;
+};
 
 
 #endif /* _ADF4360_H */
