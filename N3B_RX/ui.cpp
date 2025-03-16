@@ -2652,7 +2652,6 @@ void ui::do_ui()
           //normal tuning
           else
             settings[idx_frequency] += encoder_change * step_sizes[settings[idx_step]];
-      printf("frq : %lu %lu %lu\r\n",settings[idx_frequency], settings[idx_min_frequency] , settings[idx_max_frequency]);
 
           //wrap frequency at band limits
           if (settings[idx_frequency] > settings[idx_max_frequency])

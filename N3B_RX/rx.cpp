@@ -156,8 +156,9 @@ void rx::apply_settings()
       // nco_frequency_Hz = nco_set_frequency(pio, sm, tuned_frequency_Hz, system_clock_rate);
       printf("FRQ: %lf\r\n",tuned_frequency_Hz);
       // adf4360_evaluate(777000);
-      offset_frequency_Hz = tuned_frequency_Hz;// - nco_frequency_Hz;
-
+      offset_frequency_Hz = tuned_frequency_Hz - 489777000;// - nco_frequency_Hz;
+      printf("offset = %f\r\n",offset_frequency_Hz);
+      
       //apply pwm_max
       pwm_max = (system_clock_rate/audio_sample_rate)-1;
       pwm_scale = 1+((INT16_MAX * 2)/pwm_max);

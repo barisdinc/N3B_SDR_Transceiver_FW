@@ -5,15 +5,10 @@
  * Author: Baris Dinc TA7W / OH2UDS
  */ 
 
-//#include "Arduino.h"
-//#include "N3B.h"
-//#include "dsp.h"
 #include <stdio.h>
 #include "pico/time.h"
 #include <hardware/gpio.h>
 #include "adf4360.h"
-
-
 
 #define MSBFIRST 1
 #define LSBFIRST 0
