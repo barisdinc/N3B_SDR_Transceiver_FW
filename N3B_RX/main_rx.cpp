@@ -48,7 +48,7 @@ int main()
 
   // adf4360_init_old();
   ADF4360_Init_new(ADF4360_4);
-  ADF4360_SetFrequency(1400000000);
+  ADF4360_SetFrequency(1479554000);
                        
   
   while(1)

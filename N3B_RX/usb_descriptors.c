@@ -117,9 +117,9 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 char const *string_desc_arr[] =
 {
         (const char[]){0x09, 0x04}, // 0: is supported language is English (0x0409)
-        "dawsonjon",                // 1: Manufacturer
-        "PicoRX",                   // 2: Product
-        "123456",                   // 3: Serials, should use chip ID
+        "ATOLYE",                // 1: Manufacturer
+        "N3B_RX_v1",                   // 2: Product
+        "10489777",                   // 3: Serials, should use chip ID
         "UAC2",                     // 4: Audio Interface
         "CDC",                      // 5: CDC Interface
 };

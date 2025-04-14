@@ -253,7 +253,7 @@ unsigned long long ADF4360_SetFrequency(unsigned long long frequency)
         rCounterValue = ADF4360_TuneRcounter(rCounterValue);
         frequencyPfd = ADF4360_st.refIn / rCounterValue;
         /* Find Counter B value using VCO frequency and PFD frequency. */
-        b = (unsigned short)((float)vcoFrequency / frequencyPfd + 0.5);
+        b = (unsigned long)((float)vcoFrequency / frequencyPfd + 0.5);
     }
     else // If ADF4360-0, ADF4360-1, ... , ADF4360-7 are used. 
     {

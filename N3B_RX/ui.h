@@ -266,8 +266,7 @@ class ui
   ui(rx_settings & settings_to_apply, rx_status & status, rx &receiver, uint8_t *ilispectrum, uint8_t &dB10);
   uint8_t display_option = 0;
   e_ui_state ui_state = ui_state_splash;
-
-
+  
 };
 
 #endif
