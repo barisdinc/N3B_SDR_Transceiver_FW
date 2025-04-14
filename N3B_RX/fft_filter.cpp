@@ -56,11 +56,11 @@ void fft_filter::filter_block(int16_t sample_real[], int16_t sample_imag[], s_fi
   }
 
   //largest bin
-  int16_t peak = 0;
-  int16_t next_peak = 0;
-  uint16_t peak_bin = 0;
+  // int16_t peak = 0;
+  // int16_t next_peak = 0;
+  // uint16_t peak_bin = 0;
 
-  //DC and positive frequencies
+  // DC and positive frequencies
   for (uint16_t i = 0; i < (new_fft_size/2u) + 1; i++) {
     //clear bins outside pass band
     if(!filter_control.upper_sideband || i < filter_control.start_bin || i > filter_control.stop_bin)
@@ -74,16 +74,16 @@ void fft_filter::filter_block(int16_t sample_real[], int16_t sample_imag[], s_fi
       sample_imag[i] = cic_correct(i, filter_control.fft_bin, sample_imag[i]);
 
       //capture highest and second highest peak
-      uint16_t magnitude = rectangular_2_magnitude(sample_real[i], sample_imag[i]);
-      if(magnitude > peak)
-      {
-        peak = magnitude; 
-        peak_bin = i;
-      }
-      else if(magnitude > next_peak)
-      {
-        next_peak = magnitude;
-      }
+      // uint16_t magnitude = rectangular_2_magnitude(sample_real[i], sample_imag[i]);
+      // if(magnitude > peak)
+      // {
+      //   peak = magnitude; 
+      //   peak_bin = i;
+      // }
+      // else if(magnitude > next_peak)
+      // {
+      //   next_peak = magnitude;
+      // }
 
     }
   }
@@ -103,40 +103,40 @@ void fft_filter::filter_block(int16_t sample_real[], int16_t sample_imag[], s_fi
       sample_imag[new_idx] = cic_correct(bin, filter_control.fft_bin, sample_imag[fft_size - (new_fft_size/2u) + i + 1]);
 
       //capture highest and second highest peak
-      uint16_t magnitude = rectangular_2_magnitude(sample_real[new_idx], sample_imag[new_idx]);
-      if(magnitude > peak)
-      {
-        peak = magnitude; 
-        peak_bin = i;
-      }
-      else if(magnitude > next_peak)
-      {
-        next_peak = magnitude;
-      }
+      // uint16_t magnitude = rectangular_2_magnitude(sample_real[new_idx], sample_imag[new_idx]);
+      // if(magnitude > peak)
+      // {
+      //   peak = magnitude; 
+      //   peak_bin = i;
+      // }
+      // else if(magnitude > next_peak)
+      // {
+      //   next_peak = magnitude;
+      // }
     }
   }
 
-  if(filter_control.enable_auto_notch)
-  {
-    //check for a consistent
-    const uint8_t confirm_threshold = 255u;
-    static uint8_t confirm_count = 0u;
-    static uint8_t last_peak_bin = 0u;
-    if(peak_bin == last_peak_bin && confirm_count < confirm_threshold) confirm_count++;
-    if(peak_bin != last_peak_bin && confirm_count > 0) confirm_count--;
-    last_peak_bin = peak_bin;
+  // if(filter_control.enable_auto_notch)
+  // {
+  //   //check for a consistent
+  //   const uint8_t confirm_threshold = 255u;
+  //   static uint8_t confirm_count = 0u;
+  //   static uint8_t last_peak_bin = 0u;
+  //   if(peak_bin == last_peak_bin && confirm_count < confirm_threshold) confirm_count++;
+  //   if(peak_bin != last_peak_bin && confirm_count > 0) confirm_count--;
+  //   last_peak_bin = peak_bin;
 
-    //remove highest bin
-    if((confirm_count > confirm_threshold/2u) && (peak_bin > 3u) && (peak_bin < new_fft_size-3u))
-    {
-      sample_real[peak_bin] = 0;
-      sample_imag[peak_bin] = 0;
-      sample_real[peak_bin+1] = 0;
-      sample_imag[peak_bin+1] = 0;
-      sample_real[peak_bin-1] = 0;
-      sample_imag[peak_bin-1] = 0;
-    }
-  }
+  //   //remove highest bin
+  //   if((confirm_count > confirm_threshold/2u) && (peak_bin > 3u) && (peak_bin < new_fft_size-3u))
+  //   {
+  //     sample_real[peak_bin] = 0;
+  //     sample_imag[peak_bin] = 0;
+  //     sample_real[peak_bin+1] = 0;
+  //     sample_imag[peak_bin+1] = 0;
+  //     sample_real[peak_bin-1] = 0;
+  //     sample_imag[peak_bin-1] = 0;
+  //   }
+  // }
 
 
   // inverse FFT

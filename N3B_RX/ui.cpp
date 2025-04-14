@@ -76,7 +76,7 @@ int32_t ui::encoder_control(int32_t *value, int32_t min, int32_t max)
 ////////////////////////////////////////////////////////////////////////////////
 void ui::setup_display() {
   disp.external_vcc=false;
-  //ssd1306_init(&disp, 128, 64, 0x3C, i2c1);
+  //OLD ssd1306_init(&disp, 128, 64, 0x3C, i2c1);
   ssd1306_init(&disp, 128, 64, 0x3C, i2c0);
 }
 
@@ -262,11 +262,12 @@ void ui::display_draw_volume(uint8_t v, uint8_t x)
 {
   const uint16_t mute_icon[15] = {0x0, 0xa, 0x1a, 0x38, 0x78, 0x6f8, 0x6f8, 0x6f8, 0x7f8, 0x6f8, 0x478, 0x838, 0x1018, 0x8, 0x0};
   const uint8_t scaled_volume = (v+5)*12/9;
-  display->fillRect(x, 100, x+12, 113, display->colour565(0,0,0));
+  display->fillRect(0, 100, 16, 16, COLOUR_BLACK);
   if (v == 0)
   {
     // display_draw_icon(x, 50-13, 16, 15, mute_icon);
     display_draw_icon(0, 100, 16, 15, mute_icon);
+    display->drawLine(0,116,16,100,display->colour565(0,255,200));
   }
   else
   {
@@ -3014,13 +3015,13 @@ void ui::draw()
         display->drawLine(63+fbin, 121, 63+fbin, 124, COLOUR_WHITE);
       }
     }
-    display->drawString(61,  127, font_16x12, "-15", COLOUR_WHITE, COLOUR_BLACK);
-    display->drawString(102, 127, font_16x12, "-10", COLOUR_WHITE, COLOUR_BLACK);
-    display->drawString(143, 127, font_16x12, "-5",  COLOUR_WHITE, COLOUR_BLACK);
-    display->drawString(186, 127, font_16x12, "0",  COLOUR_WHITE, COLOUR_BLACK);
-    display->drawString(225, 127, font_16x12, "5",   COLOUR_WHITE, COLOUR_BLACK);
-    display->drawString(265, 127, font_16x12, "10",  COLOUR_WHITE, COLOUR_BLACK);
-    display->drawString(300, 127, font_16x12, "15",  COLOUR_WHITE, COLOUR_BLACK);
+    display->drawString(60,  127, font_8x5, "-15", COLOUR_WHITE, COLOUR_BLACK);
+    display->drawString(100, 127, font_8x5, "-10", COLOUR_WHITE, COLOUR_BLACK);
+    display->drawString(140, 127, font_8x5, "-5",  COLOUR_WHITE, COLOUR_BLACK);
+    display->drawString(190, 127, font_8x5, "0",  COLOUR_WHITE, COLOUR_BLACK);
+    display->drawString(230, 127, font_8x5, "5",   COLOUR_WHITE, COLOUR_BLACK);
+    display->drawString(270, 127, font_8x5, "10",  COLOUR_WHITE, COLOUR_BLACK);
+    display->drawString(305, 127, font_8x5, "15",  COLOUR_WHITE, COLOUR_BLACK);
 }
 
 uint16_t ui::heatmap(uint8_t value, bool blend, bool highlight)
@@ -3116,6 +3117,9 @@ int ui::dBm_to_S2(float power_dBm) {
 void ui::update_spectrum(rx &receiver, rx_settings &settings, rx_status &status, uint8_t ilispectrum[], uint8_t dB10)
 {
 
+  //  for (uint8_t xx=0; xx<255; xx++) printf("%d\r\n",ilispectrum[xx]);
+  //  printf("\r\n");
+  //  return;
     if(!enabled) return;
     if(!power_state) return;
 
@@ -3257,7 +3261,8 @@ void ui::update_spectrum(rx &receiver, rx_settings &settings, rx_status &status,
       {
         char buffer[20];
         snprintf(buffer, 20, "10.%2lu.%03lu.%03lu", MHz, kHz, Hz);
-        display->drawString(80, 10, font_16x12, buffer, COLOUR_WHITE, COLOUR_BLACK);
+        display->fillRect(75,4,20,178, COLOUR_BLACK);
+        display->drawString(80, 5, font_16x12, buffer, COLOUR_WHITE, COLOUR_BLACK);
         lastMHz = MHz;
         lastkHz = kHz;
         lastHz = Hz;

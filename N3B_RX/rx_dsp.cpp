@@ -4,6 +4,7 @@
 #include "utils.h"
 #include "pico/stdlib.h"
 #include "cic_corrections.h"
+#include "ui.h"
 
 #include <math.h>
 #include <cstdio>
@@ -94,15 +95,17 @@ uint16_t __not_in_flash_func(rx_dsp :: process_block)(uint16_t samples[], int16_
   int32_t magnitude_sum = 0;
   int16_t real[adc_block_size/cic_decimation_rate];
   int16_t imag[adc_block_size/cic_decimation_rate];
-
+  
   for(uint16_t idx=0; idx<adc_block_size; idx++)
   {
       //convert to signed representation
       const int16_t raw_sample = samples[idx];
-
+      
       //work out which samples are i and q
-      int16_t i = ((idx&1)^1^swap_iq)*raw_sample;//even samples contain i data
-      int16_t q = ((idx&1)^swap_iq)*raw_sample;//odd samples contain q data
+      int16_t q = ((idx&1)^1^swap_iq)*raw_sample;//even samples contain i data
+      int16_t i = ((idx&1)^swap_iq)*raw_sample;//odd samples contain q data
+      //printf("%d,%d\r\n",i,q);
+      //if (i!=0) printf("%d\r\n",i);
 
       //reduce sample rate by a factor of 16
       if(decimate(i, q))
@@ -188,7 +191,6 @@ uint16_t __not_in_flash_func(rx_dsp :: process_block)(uint16_t samples[], int16_
 
   //average over the number of samples
   signal_amplitude = (magnitude_sum * decimation_rate)/adc_block_size;
-
   return adc_block_size/decimation_rate;
 }
 
@@ -196,7 +198,7 @@ void __not_in_flash_func(rx_dsp :: frequency_shift)(int16_t &i, int16_t &q)
 {
     //Apply frequency shift (move tuned frequency to DC)         
     const uint16_t scaled_phase = (phase >> 21);
-    const int16_t rotation_i =  sin_table[(scaled_phase+512u) & 0x7ff]; //32 - 21 = 11MSBs
+    const int16_t rotation_i =  sin_table[(scaled_phase+512u) & 0x7ff]; //32 - 21 = 11MSBs //cosine
     const int16_t rotation_q = -sin_table[scaled_phase];
 
     phase += frequency;
@@ -512,8 +514,9 @@ void rx_dsp :: set_frequency_offset_Hz(double offset_frequency)
 {
   offset_frequency_Hz = offset_frequency;
   const float bin_width = adc_sample_rate/(cic_decimation_rate*256);
-  filter_control.fft_bin = offset_frequency/bin_width;
+  filter_control.fft_bin = +1 * offset_frequency/bin_width;
   frequency = ((double)(1ull<<32)*offset_frequency)*cic_decimation_rate/(adc_sample_rate);
+  printf("F: %lb bw= %f fc=%d \r\n",frequency,bin_width, filter_control.fft_bin);
 }
 
 
@@ -619,7 +622,7 @@ void rx_dsp :: get_spectrum(uint8_t spectrum[], uint8_t &dB10)
   sem_acquire_blocking(&spectrum_semaphore);
 
   //find minimum and maximum values
-  const uint16_t lowest_max = 2500u;
+  // const uint16_t lowest_max = 2500u;
   static uint16_t max=65523u;//long term maximum
   uint16_t new_max=0u;
   static uint16_t min=1u;//long term maximum
@@ -627,25 +630,29 @@ void rx_dsp :: get_spectrum(uint8_t spectrum[], uint8_t &dB10)
   for(uint16_t i=0; i<256; ++i)
   {
     const uint16_t magnitude = cic_correct(freq_bin(i), capture_filter_control.fft_bin, capture[i]);
+    // const uint16_t magnitude = capture[i];
     if(magnitude == 0) continue;
     new_max = std::max(magnitude, new_max);
     new_min = std::min(magnitude, new_min);
   }
   max=max - (max >> 1) + (new_max >> 1);
   min=min - (min >> 1) + (new_min >> 1);
-  const float logmin = log10f(min);
-  const float logmax = log10f(std::max(max, lowest_max));
+  // const float logmin = log10f(min);
+  // const float logmax = log10f(std::max(max, lowest_max));
 
   //clamp and convert to log scale 0 -> 255
   for(uint16_t i=0; i<256; i++)
   {
     const uint16_t magnitude = cic_correct(freq_bin(i), capture_filter_control.fft_bin, capture[i]);
+    // const uint16_t magnitude = capture[i];    
     if(magnitude == 0)
     {
       spectrum[fft_shift(i)] = 0u;
     } else {
-      const float normalised = 255.0f*(log10f(magnitude)-logmin)/(logmax-logmin);
-      const float clamped = std::max(std::min(normalised, 255.0f), 0.0f);
+      // const float normalised = 255.0f*(log10f(magnitude)-logmin)/(logmax-logmin);
+      // const float clamped = std::max(std::min(normalised, 255.0f), 0.0f);
+      const float clamped = std::max(std::min((float)capture[i], 255.0f), 0.0f);
+      // const float clamped = std::max(std::min((float)magnitude, 255.0f), 0.0f);
       spectrum[fft_shift(i)] = clamped;
     }
   }

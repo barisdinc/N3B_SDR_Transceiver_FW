@@ -61,6 +61,7 @@ int main()
       last_ui_update = time_us_32();
       user_interface.do_ui();
       receiver.get_spectrum(spectrum, dB10);
+      // for (uint16_t yy=0;yy<256; yy++) spectrum[yy] = yy;
     }
 
     else if(time_us_32() - last_cat_update > CAT_REFRESH_US)

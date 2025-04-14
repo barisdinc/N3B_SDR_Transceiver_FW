@@ -159,8 +159,12 @@ void rx::apply_settings()
       printf("FRAdf  : %lf\r\n",freq_to_adf);
       double adf_frequency = ADF4360_SetFrequency(freq_to_adf);      
       printf("FRQ ret: %lf\r\n",adf_frequency);
-      offset_frequency_Hz = (freq_to_adf - adf_frequency) / 2; // ADF output is dividev by 2 in IQ demodulator
-      printf("offset = %f\r\n",offset_frequency_Hz);
+      int16_t fark = 1 * ((freq_to_adf - adf_frequency) / 2); // ADF output is dividev by 2 in IQ demodulator
+      // if (fark > 0) 
+      {
+        offset_frequency_Hz = fark;
+        printf("offset = %f  fark=%d\r\n",offset_frequency_Hz,fark);
+      }
       
       //apply pwm_max
       pwm_max = (system_clock_rate/audio_sample_rate)-1;
@@ -384,11 +388,14 @@ uint16_t __not_in_flash_func(rx::process_block)(uint16_t adc_samples[], int16_t 
   int32_t safe_usb_volume = usb_volume;
   bool safe_usb_mute = usb_mute;
   critical_section_exit(&usb_volumute);
-
-  //process adc IQ samples to produce raw audio
+   //process adc IQ samples to produce raw audio
   int16_t usb_audio[adc_block_size/decimation_rate];
   uint16_t num_samples = rx_dsp_inst.process_block(adc_samples, usb_audio);
-  
+  // for (uint16_t cnt=0; cnt<adc_block_size; cnt++)
+  // {
+  //   printf("%d,", adc_samples[cnt]);
+  // }
+  // printf("\r\n");
   //post process audio for USB and PWM
   uint16_t odx = 0;
   for(uint16_t idx=0; idx<num_samples; ++idx)
