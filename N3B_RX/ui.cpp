@@ -3071,9 +3071,9 @@ uint16_t ui::heatmap(uint8_t value, bool blend, bool highlight)
     
     if(blend)
     {
-      r = (uint16_t)r-(r>>1) + (blend_r>>1);
-      g = (uint16_t)g-(g>>1) + (blend_g>>1);
-      b = (uint16_t)b-(b>>1) + (blend_b>>1);
+      r = (uint16_t)r-(r>>2) + (blend_r>>2);
+      g = (uint16_t)g-(g>>2) + (blend_g>>2);
+      b = (uint16_t)b-(b>>2) + (blend_b>>2);
     }
 
     if(highlight)
