@@ -257,7 +257,7 @@ void hmi_callback(uint gpio, uint32_t events)
 
 void hmi_draw_spectrum(void)
 {
-	int16_t* fft_buffer = get_fft_buffer_address();
+	// int16_t* fft_buffer = get_fft_buffer_address();
 
 	if (waterfall_active_row == SPECTRUM_HEIGHT) waterfall_active_row = 0; //go to next buffer for net call
 	uint16_t* wf_act_p = &waterfall_buffer[waterfall_active_row][0]; //target memory is the first element of active waterfall buffer
@@ -269,22 +269,22 @@ int imm = 0;
 	// ili9341_draw_pixel(aa,150, *fft_buffer++);
 	//spectrum
 //BD	ili9341_draw_line(spectrum_pos+10,100,spectrum_pos+10,160, ILI9341_BLACK);//*fft_buffer++);
-	GFX_drawFastVLine(spectrum_pos+10, 100, 100, ILI9341_BLACK);
-	uint16_t signal_strength = abs(*fft_buffer++ + *fft_buffer++ + *fft_buffer++);
-	signal_strength = signal_strength>>10;
+	// GFX_drawFastVLine(spectrum_pos+10, 100, 100, ILI9341_BLACK);
+	// uint16_t signal_strength = abs(*fft_buffer++ + *fft_buffer++ + *fft_buffer++);
+	// signal_strength = signal_strength>>10;
 
 //BD	ili9341_draw_line(spectrum_pos+10,160,spectrum_pos+10,160-signal_strength, ILI9341_GREEN);//*fft_buffer++);
-	GFX_drawFastVLine(spectrum_pos+10, 160, signal_strength, ILI9341_GREEN);
+	// GFX_drawFastVLine(spectrum_pos+10, 160, signal_strength, ILI9341_GREEN);
 	//waterfall
-	uint16_t waterfall_color = signal_strength << 11 | signal_strength << 5 | signal_strength;
+	// uint16_t waterfall_color = signal_strength << 11 | signal_strength << 5 | signal_strength;
 
 	
-	*wf_act_p = signal_strength; // waterfall_active_row * 300 + imm;//
+	// *wf_act_p = signal_strength; // waterfall_active_row * 300 + imm;//
 	imm++;
 	wf_act_p++;
 	
 //BD	ili9341_draw_pixel(spectrum_pos+10,168+waterfall_active_row, signal_strength<<10);//*fft_buffer++);
-	GFX_drawPixel(spectrum_pos+10,168+waterfall_active_row, signal_strength<<10);
+	// GFX_drawPixel(spectrum_pos+10,168+waterfall_active_row, signal_strength<<10);
 	//printf("[%d] %d %x\n", waterfall_active_row, signal_strength, waterfall_color);
 	}	
 
@@ -330,19 +330,19 @@ void hmi_evaluate(void)
 	char s[32];
 	
 	// Print top line of display
-	GFX_setCursor(10,75);
+	// GFX_setCursor(10,75);
 	if (tx_enabled)
-		GFX_printf("10489,%6.2f %c %-2d", (double)hmi_freq/1000.0, 0x07, 0);
-		// sprintf(s, "10489,%6.2f %c %-2d", (double)hmi_freq/1000.0, 0x07, 0);
+		// GFX_printf("10489,%6.2f %c %-2d", (double)hmi_freq/1000.0, 0x07, 0);
+		sprintf(s, "10489,%6.2f %c %-2d", (double)hmi_freq/1000.0, 0x07, 0);
 	else
-		GFX_printf("10489,%6.2f %cS%-2d", (double)hmi_freq/1000.0, 0x06, get_sval());
-		// sprintf(s, "10489,%6.2f %cS%-2d", (double)hmi_freq/1000.0, 0x06, get_sval());
+		// GFX_printf("10489,%6.2f %cS%-2d", (double)hmi_freq/1000.0, 0x06, get_sval());
+		sprintf(s, "10489,%6.2f %cS%-2d", (double)hmi_freq/1000.0, 0x06, get_sval());
 
 //BD	ili9341_draw_string(10,40,s, ILI9341_YELLOW, ILI9341_BLACK,3);	
 
-	GFX_setCursor(10,100);
-	GFX_printf("%s", hmi_o_mode[hmi_sub[HMI_S_MODE]]);
-	//BD sprintf(s, "%s", hmi_o_mode[hmi_sub[HMI_S_MODE]]);
+	// GFX_setCursor(10,100);
+	// GFX_printf("%s", hmi_o_mode[hmi_sub[HMI_S_MODE]]);
+	sprintf(s, "%s", hmi_o_mode[hmi_sub[HMI_S_MODE]]);
 //BD	ili9341_draw_string(10,70,s, ILI9341_LIGHTGREY, ILI9341_BLACK,3);	
 
 	if (is_fft_completed())
@@ -352,42 +352,42 @@ void hmi_evaluate(void)
 	}
 
 	// Print bottom line of display, depending on state
-	GFX_setCursor(10,30);
+	// GFX_setCursor(10,30);
 	switch (hmi_state)
 	{
 	case HMI_S_TUNE:
-		GFX_printf("%s %s %s", hmi_o_vox[hmi_sub[HMI_S_VOX]], hmi_o_agc[hmi_sub[HMI_S_AGC]], hmi_o_pre[hmi_sub[HMI_S_PRE]]);
-		// sprintf(s, "%s %s %s", hmi_o_vox[hmi_sub[HMI_S_VOX]], hmi_o_agc[hmi_sub[HMI_S_AGC]], hmi_o_pre[hmi_sub[HMI_S_PRE]]);
+		// GFX_printf("%s %s %s", hmi_o_vox[hmi_sub[HMI_S_VOX]], hmi_o_agc[hmi_sub[HMI_S_AGC]], hmi_o_pre[hmi_sub[HMI_S_PRE]]);
+		sprintf(s, "%s %s %s", hmi_o_vox[hmi_sub[HMI_S_VOX]], hmi_o_agc[hmi_sub[HMI_S_AGC]], hmi_o_pre[hmi_sub[HMI_S_PRE]]);
 //BD		ili9341_draw_string(10,10,s, ILI9341_YELLOW, ILI9341_BLACK,3);	
 //BD		ili9341_draw_rect(105+(hmi_option>3?hmi_option*16+20:hmi_option*16), 40, 20, 20,  ILI9341_RED);
 		break;
 	case HMI_S_MODE:
-		GFX_printf("Set Mode: %s        ", hmi_o_mode[hmi_option]);
-		// sprintf(s, "Set Mode: %s        ", hmi_o_mode[hmi_option]);
+		// GFX_printf("Set Mode: %s        ", hmi_o_mode[hmi_option]);
+		sprintf(s, "Set Mode: %s        ", hmi_o_mode[hmi_option]);
 //BD		ili9341_draw_string(10,10,s, ILI9341_YELLOW, ILI9341_BLACK,3);	
 //BD		ili9341_draw_rect(90, 10, 20, 20, ILI9341_RED);
 		break;
 	case HMI_S_AGC:
-		GFX_printf("Set AGC: %s        ", hmi_o_agc[hmi_option]);
-		// sprintf(s, "Set AGC: %s        ", hmi_o_agc[hmi_option]);
+		// GFX_printf("Set AGC: %s        ", hmi_o_agc[hmi_option]);
+		sprintf(s, "Set AGC: %s        ", hmi_o_agc[hmi_option]);
 //BD		ili9341_draw_string(10,10,s, ILI9341_YELLOW, ILI9341_BLACK,3);	
 //BD		ili9341_draw_rect(80, 10, 20, 20, ILI9341_RED);
 		break;
 	case HMI_S_PRE:
-		GFX_printf("Set Pre: %s        ", hmi_o_pre[hmi_option]);
-		// sprintf(s, "Set Pre: %s        ", hmi_o_pre[hmi_option]);
+		// GFX_printf("Set Pre: %s        ", hmi_o_pre[hmi_option]);
+		sprintf(s, "Set Pre: %s        ", hmi_o_pre[hmi_option]);
 //BD		ili9341_draw_string(10,10,s, ILI9341_YELLOW, ILI9341_BLACK,3);	
 //BD		ili9341_draw_rect(80, 10, 20, 20, ILI9341_RED);
 		break;
 	case HMI_S_VOX:
-		GFX_printf(s, "Set VOX: %s        ", hmi_o_vox[hmi_option]);
-		// sprintf(s, "Set VOX: %s        ", hmi_o_vox[hmi_option]);
+		// GFX_printf(s, "Set VOX: %s        ", hmi_o_vox[hmi_option]);
+		sprintf(s, "Set VOX: %s        ", hmi_o_vox[hmi_option]);
 //BD		ili9341_draw_string(10,10,s, ILI9341_YELLOW, ILI9341_BLACK,3);	
 //BD		ili9341_draw_rect(80, 10, 20, 20, ILI9341_RED);
 		break;
 	case HMI_S_BPF:
-		GFX_printf(s, "Band: %d %s        ", hmi_option, hmi_o_bpf[hmi_option]);
-		// sprintf(s, "Band: %d %s        ", hmi_option, hmi_o_bpf[hmi_option]);
+		// GFX_printf(s, "Band: %d %s        ", hmi_option, hmi_o_bpf[hmi_option]);
+		sprintf(s, "Band: %d %s        ", hmi_option, hmi_o_bpf[hmi_option]);
 //BD		ili9341_draw_string(10,10,s, ILI9341_YELLOW, ILI9341_BLACK,3);	
 //BD		ili9341_draw_rect(80, 10, 20, 20, ILI9341_RED);
 	default:
@@ -427,7 +427,7 @@ void hmi_evaluate(void)
 		dsp_setagc(hmi_sub[HMI_S_AGC]);	
 		hmi_update = false;
 	}
-	GFX_flush();
+	// GFX_flush();
 }
 
 void hmi_drawBackgroundBitmap()

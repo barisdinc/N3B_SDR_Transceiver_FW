@@ -24,7 +24,7 @@
 #include "hardware/timer.h"
 #include "hardware/clocks.h"
 
-#include "n3b_main_tx.h"
+#include "main_n3b_tx.h"
 #include "dsp.h"
 #include "hmi.h"
 #include "fix_fft.h"
@@ -291,7 +291,7 @@ void __not_in_flash_func(dma_handler)(void)
 semaphore_t dsp_sem;
 repeating_timer_t dsp_timer;
 volatile int cnt = 4;
-volatile int32_t rx_agc = 1, tx_agc = 1;									// Factor as AGC  WAS 1
+volatile int32_t rx_agc = 1, tx_agc = 1;									// Factor as AGC
 bool __not_in_flash_func(dsp_callback)(repeating_timer_t *t) 
 {
 	int32_t temp;
@@ -354,8 +354,8 @@ bool __not_in_flash_func(dsp_callback)(repeating_timer_t *t)
 	if (tx_enabled)
 	{								
 		A_buf[dsp_active][dsp_tick] = (int16_t)(tx_agc*adc_result[2]);		// Copy A sample to A buffer
-		pwm_set_gpio_level(DAC_I, I_buf[dsp_active][dsp_tick] + DAC_BIAS+I_shft);	// Output I to DAC
-		pwm_set_gpio_level(DAC_Q, Q_buf[dsp_active][dsp_tick] + DAC_BIAS+Q_shft);	// Output Q to DAC
+		pwm_set_gpio_level(DAC_I, I_buf[dsp_active][dsp_tick] + DAC_BIAS);	// Output I to DAC
+		pwm_set_gpio_level(DAC_Q, Q_buf[dsp_active][dsp_tick] + DAC_BIAS);	// Output Q to DAC
 	}
 	else
 	{
@@ -379,8 +379,8 @@ bool __not_in_flash_func(dsp_callback)(repeating_timer_t *t)
 	if (tx_enabled)
 	{
 		a_sample = tx_agc * adc_result[2];									// Store A sample for background processing
-		pwm_set_gpio_level(DAC_I,  i_sample);								// Output calculated I sample to DAC
-		pwm_set_gpio_level(DAC_Q,  q_sample);								// Output calculated Q sample to DAC
+		pwm_set_gpio_level(DAC_I, i_sample);								// Output calculated I sample to DAC
+		pwm_set_gpio_level(DAC_Q, q_sample);								// Output calculated Q sample to DAC
 	}
 	else
 	{							
@@ -499,20 +499,17 @@ void __not_in_flash_func(dsp_loop)()
 
 		if (tx_enabled)														// Use previous setting
 		{
-			// gpio_put(GP_PTT, false); 										// Drive PTT low (active)  
-			// gpio_put(GPIO_14, true);									// Set LED on
+			gpio_put(GP_PTT, false); 										// Drive PTT low (active)  
 			tx();															// Do TX signal processing
 		}
 		else
 		{
-			// gpio_put(GP_PTT, true);											// Drive PTT high (inactive)   
-			// gpio_put(GPIO_14, false);									// Set LED on
+			gpio_put(GP_PTT, true);											// Drive PTT high (inactive)   
 			rx();															// Do RX signal processing
 		}
 		
 		/** !!! This is a trap, ptt remains active after once asserted: TO BE CHECKED! **/
-		tx_enabled = ptt_active;								// Check RX or TX	
-		// tx_enabled = vox_active || ptt_active;								// Check RX or TX	
+		tx_enabled = vox_active || ptt_active;								// Check RX or TX	
 		
 #if DSP_FFT == 1
 		dsp_tickx = dsp_tick;

@@ -16,9 +16,7 @@
 #include "pico.h"
 #include "pico/bootrom.h"
 
-#include "n3b_main_tx.h"
-#include "lcd.h"
-#include "adf4360.h"
+#include "main_n3b_tx.h"
 #include "dsp.h"
 #include "monitor.h"
 
@@ -51,15 +49,15 @@ typedef struct
 /*** Initialisation, called at startup ***/
 void mon_init()
 {
-    // stdio_init_all();								// Initialize Standard IO
+    stdio_init_all();								// Initialize Standard IO
 	mon_cmd[CMD_LEN] = '\0';						// Termination to be sure
 	printf("\n");
 	printf("=============\n");
-	printf(" N3B TX 2400 \n");
-	printf("             \n");
-	printf(" ATOLYE 2024 \n");
+	printf(" uSDR-Pico   \n");
+	printf("  PE1ATM     \n");
+	printf(" 2021, Udjat \n");
 	printf("=============\n");
-	printf("N3B_TX> ");								// prompt
+	printf("Pico> ");								// prompt
 }
 
 
@@ -74,78 +72,6 @@ void mon_init()
 void mon_flash(void)
 {
 	reset_usb_boot(1<<PICO_DEFAULT_LED_PIN,0);
-}
-void inc_i(void)
-{
-	I_shft += 10;
-	printf("I = %d \n", I_shft);
-}
-void inc_q(void)
-{
-	Q_shft += 10;
-	printf("Q = %d \n", Q_shft);
-}
-void dec_i(void)
-{
-	I_shft -= 10;
-	printf("I = %d \n", I_shft);
-}
-void dec_q(void)
-{
-	Q_shft -= 10;
-	printf("Q = %d \n", Q_shft);
-}
-
-/* 
- * Dumps a defined range of Si5351 registers 
- */
-uint8_t si5351_reg[200];
-void mon_si(void)
-{
-	int base=0, nreg=0, i;
-
-	if (nargs>2) 
-	{
-		base = atoi(argv[1]);
-		nreg = atoi(argv[2]);
-	}
-	if ((base<0)||(base+nreg>200)) return;
-
-	for (i=0; i<200; i++) si5351_reg[i] = 0xaa;
-	// si_getreg(si5351_reg, (uint8_t)base, (uint8_t)nreg);
-	// for (i=0; i<nreg; i++) printf("%03d : %02x \n", base+i, (int)(si5351_reg[i]));
-	printf("\n");
-}
-
-/* 
- * Dumps the VFO registers 
- */
-vfo_t m_vfo;
-void mon_vfo(void)
-{
-	int i;
-
-	if (nargs>1) 
-		i = atoi(argv[1]);
-	if ((i<0)||(i>1)) return;
-
-	// si_getvfo(i, &m_vfo);														// Get local copy
-	// printf("Frequency: %lu\n", m_vfo.freq);
-	// printf("Phase    : %u\n", (int)(m_vfo.phase));
-	// printf("Ri       : %lu\n", (int)(m_vfo.ri));
-	// printf("MSi      : %lu\n", (int)(m_vfo.msi));
-	// printf("MSN      : %g\n\n", m_vfo.msn);
-}
-
-
-/* 
- * Dumps the entire built-in and programmed characterset on the LCD 
- */
-void mon_lt(void)
-{
-	printf("Check LCD...");
-	lcd_test();
-	printf("\n");
 }
 
 
@@ -166,53 +92,6 @@ void mon_pt(void)
 		printf("PTT active\n");
 	}
 	tx_enabled = ptt;
-}
-
-/*
- * Relay read or write
- */
-void mon_bp(void)
-{
-	// int ret;
-	
-	if (*argv[1]=='w')
-	{
-		if (nargs>2) 
-		{
-			// ret = atoi(argv[2]);
-			// relay_setband(ret);
-		}
-	}
-	sleep_ms(1);
-	// ret = relay_getband();
-	// if (ret<0)
-	// 	printf ("I2C read error\n");
-	// else
-	// 	printf("%02x\n",  ret);
-}
-
-/*
- * Relay read or write
- */
-void mon_rx(void)
-{
-	int ret;
-	
-	if (*argv[1]=='w')
-	{
-		if (nargs>2) 
-		{
-			ret = atoi(argv[2]);
-			// relay_setattn(ret);
-		}
-	}
-	sleep_ms(1);
-	// ret = relay_getattn();
-	// if (ret<0)
-	// 	printf ("I2C read error\n");
-	// else
-	// 	printf("%02x\n", ret);
-	
 }
 
 /* 
@@ -252,22 +131,13 @@ void mon_adc(void)
 /*
  * Command shell table, organize the command functions above
  */
-#define NCMD	13
+#define NCMD	4
 shell_t shell[NCMD]=
 {
 	{"flash", 5, &mon_flash, "flash", "Reboots into USB bootloader mode"},
-	{"si",  2, &mon_si,  "si <start> <nr of reg>", "Dumps Si5351 registers"},
-	{"vfo", 3, &mon_vfo, "vfo <id>", "Dumps vfo[id] registers"},
-	{"lt",  2, &mon_lt,  "lt (no parameters)", "LCD test, dumps characterset on LCD"},
 	{"or",  2, &mon_or,  "or (no parameters)", "Returns overrun information"},
 	{"pt",  2, &mon_pt,  "pt (no parameters)", "Toggles PTT status"},
-	{"bp",  2, &mon_bp,  "bp {r|w} <value>", "Read or Write BPF relays"},
-	{"rx",  2, &mon_rx,  "rx {r|w} <value>", "Read or Write RX relays"},
-	{"adc", 3, &mon_adc, "adc (no parameters)", "Dump latest ADC readouts"},
-	{"i+", 3, &inc_i, "increase i shift", ""},
-	{"i-", 3, &dec_i, "decrease i shift", ""},
-	{"q+", 3, &inc_q, "increase q shift", ""},
-	{"q-", 3, &dec_q, "decrease q shift)", ""}
+	{"adc", 3, &mon_adc, "adc (no parameters)", "Dump latest ADC readouts"}
 };
 
 
@@ -328,7 +198,7 @@ void mon_evaluate(void)
 		if (i>0)									// something to parse?
 			mon_parse(mon_cmd);						// --> process command
 		i=0;										// reset index
-		printf("N3B_TX> ");							// prompt
+		printf("Pico> ");							// prompt
 		break;
 	case LF:
 		break;										// Ignore, assume CR as terminator

@@ -1,8 +1,10 @@
-#ifndef __N3B_MAIN_TX_H__
-#define __N3B_MAIN_TX_H__
+#ifndef __MAIN_N3B_TX_H__
+#define __MAIN_N3B_TX_H__
 /* 
- * n3b_main_tx.h
+ * uSDR.h
  *
+ * Created: Aug 2022
+ * Author: Arjan te Marvelde
  *
  * This file contains the system-wide definitions and platform services.
  *
@@ -13,7 +15,7 @@
 
 /* Set this to 1 when FFT engine must be used */
 
-#define DSP_FFT					1
+#define DSP_FFT					0
 
 
 /* GPIO (pin) assignments */
@@ -25,8 +27,8 @@
 #define GP_AUX_2				8											// Pin 11: Left move
 #define GP_AUX_3				9											// Pin 12: Right move
 #define GP_PTT					15											// Pin 20: PTT line (low is active)
-#define SLAVE_I2C0_SDA			16											// Pin 21: I2C channel 0 - data
-#define SLAVE_I2C0_SCL			17											// Pin 22: I2C channel 0 - clock
+#define I2C0_SDA				16											// Pin 21: I2C channel 0 - data
+#define I2C0_SCL				17											// Pin 22: I2C channel 0 - clock
 #define I2C1_SDA				18											// Pin 24: I2C channel 1 - data
 #define I2C1_SCL				19											// Pin 25: I2C channel 1 - clock
 #define DAC_Q					20											// Pin 26: PWM DAC Q channel
@@ -35,11 +37,6 @@
 #define ADC_Q					26											// Pin 31: ADC 0
 #define ADC_I					27											// Pin 32: ADC 1
 #define ADC_A					28											// Pin 34: ADC 2
-#define GPIO_14                 14                                          //PIN 19  : general purpose
-// #define ADF_LE                  13
-// #define ADF_DAT                 11
-// #define ADF_CLK                 10
-// #define ADF_MUX                 4
 
 
 
@@ -54,7 +51,7 @@
 #define I2C_RX					0x21										// Expander on Rx board
 #define I2C_BPF					0x20										// Expander on Filter board
 #define I2C_VFO					0x60										// Si5351A
-#define I2C_LCD					0x27										// Grove: 0x3E, 8574 backpack range: 0x20..0x27
+#define I2C_LCD					0x3E										// Grove: 0x3E, 8574 backpack range: 0x20..0x27
 
 
 /* I2C wrapper functions (blocking write and read) */
@@ -70,12 +67,8 @@ int i2c_get_data(i2c_inst_t *i2c, uint8_t addr, uint8_t *dst, size_t len, bool n
 #define LCD_1804			0												// Type 0: Seeed / Grove
 #define LCD_8574_ADA		1												// Type 1: Adafruit I2C backpack
 #define LCD_8574_GEN		2												// Type 2: Generic I2C backpack
-#define LCD_TYPE			LCD_8574_GEN										// Active selection
-
-#define FREQ_TX_BASE        2399500000 //base frequency is 2.4 GHz, e.g display shows 777 -> 2400.277
+#define LCD_TYPE			LCD_1804										// Active selection
 
 
-static int8_t I_shft = 0;
-static int8_t Q_shft = 0;
 
 #endif

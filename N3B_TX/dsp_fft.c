@@ -72,7 +72,7 @@
  *
  */
 
-#include "n3b_main_tx.h"
+#include "uSDR.h"
 
 /*
  * FFT buffer allocation
@@ -123,52 +123,45 @@ volatile uint32_t dsp_tickx  = 0;											// Load indicator DSP loop
 void  __not_in_flash_func(dsp_bandpass)(int lowbin, int highbin, int sign)
 {
 	int i, lo1, lo2, hi1, hi2;
+	
 	if ((lowbin<3)||(highbin>(FFT_SIZE/2-3))||(highbin-lowbin<6)) return;
 	
 	XI_buf[0] = 0; XQ_buf[0] = 0; 	
 	
 	// Boundaries are inclusive
-	if (sign>=0) { 
-		lo1 = lowbin-2; 
-		lo2 = highbin+2; 
-		for (i=1; i<lo1; i++)          { XI_buf[i] = 0; XQ_buf[i] = 0; }	// Null all bins excluded from filter
-		// Calculate edges, raised cosine
-		i=lo1;																	// USB
-		XI_buf[i] = XI_buf[i]*0.067; XQ_buf[i] = XQ_buf[i]*0.067; i++;
-		XI_buf[i] = XI_buf[i]*0.250; XQ_buf[i] = XQ_buf[i]*0.250; i++;
-		XI_buf[i] = XI_buf[i]*0.500; XQ_buf[i] = XQ_buf[i]*0.500; i++;
-		XI_buf[i] = XI_buf[i]*0.750; XQ_buf[i] = XQ_buf[i]*0.750; i++;
-		XI_buf[i] = XI_buf[i]*0.933; XQ_buf[i] = XQ_buf[i]*0.933; 
-		i=lo2;
-		XI_buf[i] = XI_buf[i]*0.067; XQ_buf[i] = XQ_buf[i]*0.067; i--;
-		XI_buf[i] = XI_buf[i]*0.250; XQ_buf[i] = XQ_buf[i]*0.250; i--;
-		XI_buf[i] = XI_buf[i]*0.500; XQ_buf[i] = XQ_buf[i]*0.500; i--;
-		XI_buf[i] = XI_buf[i]*0.750; XQ_buf[i] = XQ_buf[i]*0.750; i--;
-		XI_buf[i] = XI_buf[i]*0.933; XQ_buf[i] = XQ_buf[i]*0.933;
-		}
-	if (sign<=0) { 
-		hi1 = FFT_SIZE-highbin-2; 
-		hi2 = FFT_SIZE-lowbin+2; 
-		for (i=hi2+1; i<FFT_SIZE; i++) { XI_buf[i] = 0; XQ_buf[i] = 0; }	// Null all bins excluded from filter
-		// Calculate edges, raised cosine
-		i=hi1;																	// LSB
-		XI_buf[i] = XI_buf[i]*0.067; XQ_buf[i] = XQ_buf[i]*0.067; i++;
-		XI_buf[i] = XI_buf[i]*0.250; XQ_buf[i] = XQ_buf[i]*0.250; i++;
-		XI_buf[i] = XI_buf[i]*0.500; XQ_buf[i] = XQ_buf[i]*0.500; i++;
-		XI_buf[i] = XI_buf[i]*0.750; XQ_buf[i] = XQ_buf[i]*0.750; i++;
-		XI_buf[i] = XI_buf[i]*0.933; XQ_buf[i] = XQ_buf[i]*0.933; 
-		i=hi2;
-		XI_buf[i] = XI_buf[i]*0.067; XQ_buf[i] = XQ_buf[i]*0.067; i--;
-		XI_buf[i] = XI_buf[i]*0.250; XQ_buf[i] = XQ_buf[i]*0.250; i--;
-		XI_buf[i] = XI_buf[i]*0.500; XQ_buf[i] = XQ_buf[i]*0.500; i--;
-		XI_buf[i] = XI_buf[i]*0.750; XQ_buf[i] = XQ_buf[i]*0.750; i--;
-		XI_buf[i] = XI_buf[i]*0.933; XQ_buf[i] = XQ_buf[i]*0.933;
-		}
-	if (sign==0) { 
-		for (i=lo2+1; i<hi1; i++)      { XI_buf[i] = 0; XQ_buf[i] = 0; }	// Null all bins excluded from filter
-		}
+	if (sign>=0) { lo1 = lowbin-2; lo2 = highbin+2; }
+	if (sign<=0) { hi1 = FFT_SIZE-highbin-2; hi2 = FFT_SIZE-lowbin+2; }
 
+	// Null all bins excluded from filter
+	for (i=1; i<lo1; i++)          { XI_buf[i] = 0; XQ_buf[i] = 0; }
+	for (i=lo2+1; i<hi1; i++)      { XI_buf[i] = 0; XQ_buf[i] = 0; }
+	for (i=hi2+1; i<FFT_SIZE; i++) { XI_buf[i] = 0; XQ_buf[i] = 0; }
 
+	// Calculate edges, raised cosine
+	i=lo1;																	// USB
+	XI_buf[i] = XI_buf[i]*0.067; XQ_buf[i] = XQ_buf[i]*0.067; i++;
+	XI_buf[i] = XI_buf[i]*0.250; XQ_buf[i] = XQ_buf[i]*0.250; i++;
+	XI_buf[i] = XI_buf[i]*0.500; XQ_buf[i] = XQ_buf[i]*0.500; i++;
+	XI_buf[i] = XI_buf[i]*0.750; XQ_buf[i] = XQ_buf[i]*0.750; i++;
+	XI_buf[i] = XI_buf[i]*0.933; XQ_buf[i] = XQ_buf[i]*0.933; 
+	i=lo2;
+	XI_buf[i] = XI_buf[i]*0.067; XQ_buf[i] = XQ_buf[i]*0.067; i--;
+	XI_buf[i] = XI_buf[i]*0.250; XQ_buf[i] = XQ_buf[i]*0.250; i--;
+	XI_buf[i] = XI_buf[i]*0.500; XQ_buf[i] = XQ_buf[i]*0.500; i--;
+	XI_buf[i] = XI_buf[i]*0.750; XQ_buf[i] = XQ_buf[i]*0.750; i--;
+	XI_buf[i] = XI_buf[i]*0.933; XQ_buf[i] = XQ_buf[i]*0.933;
+	i=hi1;																	// LSB
+	XI_buf[i] = XI_buf[i]*0.067; XQ_buf[i] = XQ_buf[i]*0.067; i++;
+	XI_buf[i] = XI_buf[i]*0.250; XQ_buf[i] = XQ_buf[i]*0.250; i++;
+	XI_buf[i] = XI_buf[i]*0.500; XQ_buf[i] = XQ_buf[i]*0.500; i++;
+	XI_buf[i] = XI_buf[i]*0.750; XQ_buf[i] = XQ_buf[i]*0.750; i++;
+	XI_buf[i] = XI_buf[i]*0.933; XQ_buf[i] = XQ_buf[i]*0.933; 
+	i=hi2;
+	XI_buf[i] = XI_buf[i]*0.067; XQ_buf[i] = XQ_buf[i]*0.067; i--;
+	XI_buf[i] = XI_buf[i]*0.250; XQ_buf[i] = XQ_buf[i]*0.250; i--;
+	XI_buf[i] = XI_buf[i]*0.500; XQ_buf[i] = XQ_buf[i]*0.500; i--;
+	XI_buf[i] = XI_buf[i]*0.750; XQ_buf[i] = XQ_buf[i]*0.750; i--;
+	XI_buf[i] = XI_buf[i]*0.933; XQ_buf[i] = XQ_buf[i]*0.933;
 }
 
 
@@ -362,44 +355,44 @@ bool __not_in_flash_func(tx)(void)
 		}
 		break;
 	case MODE_LSB:
-		// // Bandpass Audio, LSB only
-		// dsp_bandpass(BIN_100, BIN_3000, -1);
-		// // Shift LSB up to Fc
-		// for (i=1; i<BIN_3000; i++)
-		// {
-		// 	XI_buf[BIN_FC-i] = XI_buf[FFT_SIZE-i];
-		// 	XQ_buf[BIN_FC-i] = XQ_buf[FFT_SIZE-i];
-		// 	XI_buf[FFT_SIZE-i] = 0;
-		// 	XQ_buf[FFT_SIZE-i] = 0;
-		// }
-		// for (i=1; i<BIN_3000; i++)
-		// {
-		// 	XI_buf[FFT_SIZE-BIN_FC+i] = XI_buf[BIN_FC-i];
-		// 	XQ_buf[FFT_SIZE-BIN_FC+i] = XQ_buf[BIN_FC-i];
-		// }
+		// Bandpass Audio, LSB only
+		dsp_bandpass(BIN_100, BIN_3000, -1);
+		// Shift LSB up to Fc
+		for (i=1; i<BIN_3000; i++)
+		{
+			XI_buf[BIN_FC-i] = XI_buf[FFT_SIZE-i];
+			XQ_buf[BIN_FC-i] = XQ_buf[FFT_SIZE-i];
+			XI_buf[FFT_SIZE-i] = 0;
+			XQ_buf[FFT_SIZE-i] = 0;
+		}
+		for (i=1; i<BIN_3000; i++)
+		{
+			XI_buf[FFT_SIZE-BIN_FC+i] = XI_buf[BIN_FC-i];
+			XQ_buf[FFT_SIZE-BIN_FC+i] = XQ_buf[BIN_FC-i];
+		}
 		break;
 	case MODE_AM:
-		// // Bandpass Audio
-		// dsp_bandpass(BIN_100, BIN_3000, 0);
-		// // Shift DSB up to Fc
-		// for (i=1; i<BIN_3000; i++)
-		// {
-		// 	XI_buf[BIN_FC+i] = XI_buf[i];
-		// 	XQ_buf[BIN_FC+i] = XQ_buf[i];
-		// 	XI_buf[i] = 0;	
-		// 	XQ_buf[i] = 0;
-		// 	XI_buf[BIN_FC-i] = XI_buf[FFT_SIZE-i];
-		// 	XQ_buf[BIN_FC-i] = XQ_buf[FFT_SIZE-i];
-		// 	XI_buf[FFT_SIZE-i] = 0;
-		// 	XQ_buf[FFT_SIZE-i] = 0;
-		// }
-		// for (i=1; i<BIN_3000; i++)
-		// {
-		// 	XI_buf[FFT_SIZE-BIN_FC-i] = XI_buf[BIN_FC+i];
-		// 	XQ_buf[FFT_SIZE-BIN_FC-i] = XQ_buf[BIN_FC+i];
-		// 	XI_buf[FFT_SIZE-BIN_FC+i] = XI_buf[BIN_FC-i];
-		// 	XQ_buf[FFT_SIZE-BIN_FC+i] = XQ_buf[BIN_FC-i];
-		// }
+		// Bandpass Audio
+		dsp_bandpass(BIN_100, BIN_3000, 0);
+		// Shift DSB up to Fc
+		for (i=1; i<BIN_3000; i++)
+		{
+			XI_buf[BIN_FC+i] = XI_buf[i];
+			XQ_buf[BIN_FC+i] = XQ_buf[i];
+			XI_buf[i] = 0;	
+			XQ_buf[i] = 0;
+			XI_buf[BIN_FC-i] = XI_buf[FFT_SIZE-i];
+			XQ_buf[BIN_FC-i] = XQ_buf[FFT_SIZE-i];
+			XI_buf[FFT_SIZE-i] = 0;
+			XQ_buf[FFT_SIZE-i] = 0;
+		}
+		for (i=1; i<BIN_3000; i++)
+		{
+			XI_buf[FFT_SIZE-BIN_FC-i] = XI_buf[BIN_FC+i];
+			XQ_buf[FFT_SIZE-BIN_FC-i] = XQ_buf[BIN_FC+i];
+			XI_buf[FFT_SIZE-BIN_FC+i] = XI_buf[BIN_FC-i];
+			XQ_buf[FFT_SIZE-BIN_FC+i] = XQ_buf[BIN_FC-i];
+		}
 		break;
 	case MODE_CW:
 

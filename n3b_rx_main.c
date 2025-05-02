@@ -81,27 +81,27 @@ bool loop_callback(struct repeating_timer *t)
 
 
 
-static const uint I2C_SLAVE_ADDRESS = 0x17;
-static const uint I2C_BAUDRATE = 100000; // 100 kHz
+// static const uint I2C_SLAVE_ADDRESS = 0x17;
+// static const uint I2C_BAUDRATE = 100000; // 100 kHz
 
-static void run_master() {
-    gpio_init(MASTER_I2C0_SDA);
-    gpio_set_function(MASTER_I2C0_SDA, GPIO_FUNC_I2C);
-    // pull-ups are already active on slave side, this is just a fail-safe in case the wiring is faulty
-    gpio_pull_up(MASTER_I2C0_SDA);
+// static void run_master() {
+    // gpio_init(MASTER_I2C0_SDA);
+    // gpio_set_function(MASTER_I2C0_SDA, GPIO_FUNC_I2C);
+    // // pull-ups are already active on slave side, this is just a fail-safe in case the wiring is faulty
+    // gpio_pull_up(MASTER_I2C0_SDA);
 
-    gpio_init(MASTER_I2C0_SCL);
-    gpio_set_function(MASTER_I2C0_SCL, GPIO_FUNC_I2C);
-    gpio_pull_up(MASTER_I2C0_SCL);
+    // gpio_init(MASTER_I2C0_SCL);
+    // gpio_set_function(MASTER_I2C0_SCL, GPIO_FUNC_I2C);
+    // gpio_pull_up(MASTER_I2C0_SCL);
 
-    i2c_init(i2c0, I2C_BAUDRATE);
+    // i2c_init(i2c0, I2C_BAUDRATE);
 
     // for (uint8_t mem_address = 0;; mem_address = (mem_address + 32) % 256) {
     //     char msg[32];
     //     snprintf(msg, sizeof(msg), "Hello, I2C slave! - 0x%02X", mem_address);
     //     uint8_t msg_len = strlen(msg);
 
-        uint8_t buf[32];
+        // uint8_t buf[32];
     //     buf[0] = mem_address;
     //     memcpy(buf + 1, msg, msg_len);
     //     // write message at mem_address
@@ -133,31 +133,31 @@ static void run_master() {
     //     puts("");
     //     sleep_ms(2000);
     // }
-    static struct
-{
-    uint8_t last_requested_mem_addr;
-    uint32_t frequency;
-    bool ptt_state;
-    bool tx_btn1;
-    bool tx_btn2;
-    bool tx_btn3;
-    bool tx_btn4;
-    // uint8_t tx_dat1;
-    // uint8_t tx_dat2;
-    // uint8_t tx_dat3;
-    // uint8_t tx_dat4;
-} tx_data;
-printf("size = %d\n", sizeof(tx_data));
-    // for(int ii=0;ii<10;ii++)
-    {
-    int count = i2c_read_blocking(i2c0, I2C_SLAVE_ADDRESS, buf, sizeof(tx_data), false);
-	for (int yy = 0; yy<sizeof(tx_data); yy++)
-		{
-			printf("c=%d %d %d\n",count, yy, buf[yy]);
-		}
-    }
+//     static struct
+// {
+//     uint8_t last_requested_mem_addr;
+//     uint32_t frequency;
+//     bool ptt_state;
+//     bool tx_btn1;
+//     bool tx_btn2;
+//     bool tx_btn3;
+//     bool tx_btn4;
+//     // uint8_t tx_dat1;
+//     // uint8_t tx_dat2;
+//     // uint8_t tx_dat3;
+//     // uint8_t tx_dat4;
+// } tx_data;
+// printf("size = %d\n", sizeof(tx_data));
+//     // for(int ii=0;ii<10;ii++)
+//     // {
+//     // int count = i2c_read_blocking(i2c0, I2C_SLAVE_ADDRESS, buf, sizeof(tx_data), false);
+// 	// for (int yy = 0; yy<sizeof(tx_data); yy++)
+// 	// 	{
+// 	// 		printf("c=%d %d %d\n",count, yy, buf[yy]);
+// 	// 	}
+//     // }
 
-}
+// }
 
 
 
@@ -179,15 +179,15 @@ int main()
 	// ili9341_init();
 	// ili9341_set_rotation(3);
 	// ili9341_fill_screen(ILI9341_BLACK);
-	LCD_setPins(4, 12, 	5, 10, 11);
-	LCD_setSPIperiph(spi1);
-	LCD_initDisplay();
-	LCD_setRotation(3);
-	LCD_WritePixel(10, 10, 5);
+	// LCD_setPins(4, 12, 	5, 10, 11);
+	// LCD_setSPIperiph(spi1);
+	// LCD_initDisplay();
+	// LCD_setRotation(3);
+	// LCD_WritePixel(10, 10, 5);
 
-	int c=0;
-	GFX_setFont(&FreeMono12pt7b);
-    GFX_createFramebuf();
+	// int c=0;
+	// GFX_setFont(&FreeMono12pt7b);
+    // GFX_createFramebuf();
 
 // const uint8_t n3b_display_map[] = {
  
@@ -195,8 +195,8 @@ int main()
 	// LCD_WriteBitmap(0,0,320,240,&n3b_display_map);
 	// while(1){}
 	// GFX_flush();
-	GFX_clearScreen();
-    run_master();
+	// GFX_clearScreen();
+    // run_master();
 
     // while (true)
     // {

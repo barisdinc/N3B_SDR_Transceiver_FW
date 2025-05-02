@@ -28,7 +28,7 @@
  *
  */
 
-#include "n3b_main_tx.h"
+#include "main_n3b_tx.h"
 
 
 volatile int32_t q_sample, i_sample, a_sample;								// Latest processed sample values

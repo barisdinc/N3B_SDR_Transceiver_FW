@@ -13,6 +13,5 @@ extern bool ptt_active;
 
 void hmi_init(void);
 void hmi_evaluate(void);
-bool is_ptt_active();
 
 #endif

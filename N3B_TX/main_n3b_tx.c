@@ -1,14 +1,14 @@
 /*
- * n3b_main_tx.c
+ * uSDR.c
  *
- * Created: June 2024
- * Author: Baris DINC OH2UDS / TA7W
+ * Created: Mar 2021
+ * Author: Arjan te Marvelde
  * 
  * The main loop of the application.
  * This initializes the units that do the actual work, and then loops in the background. 
  * Other units are:
  * - dsp.c, containing all signal processing in RX and TX branches. This part runs on the second processor core.
- * - adf4306.c, containing all controls for setting up the clock generator.
+ * - si5351.c, containing all controls for setting up the si5351 clock generator.
  * - lcd.c, contains all functions to put something on the LCD
  * - hmi.c, contains all functions that handle user inputs
  */
@@ -22,13 +22,10 @@
 #include "hardware/timer.h"
 #include "hardware/clocks.h"
 
-#include "n3b_main_tx.h"
+#include "main_n3b_tx.h"
 #include "hmi.h"
-#include "lcd.h"
 #include "dsp.h"
-#include "adf4360.h"
 #include "monitor.h"
-#include "i2c_slave.h"
 
 
 
@@ -90,23 +87,26 @@ int main()
 	 */
 	//vreg_set_voltage(VREG_VOLTAGE_1_25); sleep_ms(10);
 	//set_sys_clock_khz(250000, false); sleep_ms(10);
-	stdio_init_all();								// Initialize Standard IO
-	sleep_ms(2000); 
+	
 	/* 
 	 * Initialize LED pin output 
 	 */
 	gpio_init(PICO_DEFAULT_LED_PIN);
 	gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
 	gpio_put(PICO_DEFAULT_LED_PIN, true);									// Set LED on
-	add_repeating_timer_ms(-LED_MS/4, led_callback, NULL, &led_timer);
+	add_repeating_timer_ms(-LED_MS, led_callback, NULL, &led_timer);
 
-	gpio_init(GPIO_14);
-	gpio_set_dir(GPIO_14, GPIO_OUT);
-	gpio_put(GPIO_14, false);
-
-
-	n3b_i2c_slave_init(); // Initialize the I2C0 communciation channel between TX and RX pico mcus in slave mode
-
+	/*
+	 * i2c0 is used for the si5351 interface
+	 * i2c1 is used for the LCD and all other interfaces
+	 * if the display cannot keep up, try lowering the i2c1 frequency
+	 * Do not invoke i2c using functions from interrupt handlers!
+	 */
+	i2c_init(i2c0, 400000);													// i2c0 initialisation at 400Khz
+	gpio_set_function(I2C0_SDA, GPIO_FUNC_I2C);
+	gpio_set_function(I2C0_SCL, GPIO_FUNC_I2C);
+	gpio_pull_up(I2C0_SDA);
+	gpio_pull_up(I2C0_SCL);
 	i2c_init(i2c1, 100000);													// i2c1 initialisation at 100Khz
 	gpio_set_function(I2C1_SDA, GPIO_FUNC_I2C);
 	gpio_set_function(I2C1_SCL, GPIO_FUNC_I2C);
@@ -115,10 +115,9 @@ int main()
 
 	/* Initialize the SW units */
 	mon_init();																// Monitor shell on stdio
-	adf4360_init();																// VFO control unit
 	dsp_init();																// Signal processing unit
-	lcd_init();	
 	hmi_init();																// HMI user inputs
+	
 	/* A simple round-robin scheduler */
 	sem_init(&loop_sem, 1, 1) ;	
 	add_repeating_timer_ms(-LOOP_MS, loop_callback, NULL, &loop_timer);

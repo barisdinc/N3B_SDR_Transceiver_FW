@@ -33,11 +33,9 @@
 #include "hardware/clocks.h"
 #include "hardware/gpio.h"
 
-#include "n3b_main_tx.h"
-#include "lcd.h"
+#include "main_n3b_tx.h"
 #include "hmi.h"
 #include "dsp.h"
-#include "adf4360.h"
 
 /*
  * GPIO masks
@@ -110,9 +108,7 @@ const char* hmi_o_bpf [HMI_NBPF] = {"<2.5","2-6","5-12","10-24","20-40"};		// In
 // Map option to setting
 int  hmi_mode[HMI_NMODE] = {MODE_USB, MODE_LSB, MODE_AM, MODE_CW};
 int  hmi_agc[HMI_NAGC]   = {AGC_NONE, AGC_SLOW, AGC_FAST};
-// int  hmi_pre[HMI_NPRE]   = {REL_ATT_30, REL_ATT_20, REL_ATT_10, REL_ATT_00, REL_PRE_10};
 int  hmi_vox[HMI_NVOX]   = {VOX_OFF, VOX_LOW, VOX_MEDIUM, VOX_HIGH};
-// int  hmi_bpf[HMI_NBPF]   = {REL_LPF2, REL_BPF6, REL_BPF12, REL_BPF24, REL_BPF40};
 
 
 int  hmi_state, hmi_option;													// Current state and menu option selection
@@ -140,10 +136,6 @@ bool ptt_active;															// Resulting state
 #define MAX(x, y)        ((x)>(y)?(x):(y))  // Get max value
 #endif
 
-bool is_ptt_active()
-{
-	return ptt_active;
-}
 
 /*
  * GPIO IRQ callback routine
@@ -257,40 +249,40 @@ void hmi_evaluate(void)
 	else
 		sprintf(s, "%s %7.1f %cS%-2d", hmi_o_mode[hmi_sub[HMI_S_MODE]], (double)hmi_freq/1000.0, 0x06, get_sval());
 
-	lcd_writexy(0,0,s);
+	// lcd_writexy(0,0,s);
 	
 	// Print bottom line of dsiplay, depending on state
 	switch (hmi_state)
 	{
 	case HMI_S_TUNE:
 		sprintf(s, "%s %s %s", hmi_o_vox[hmi_sub[HMI_S_VOX]], hmi_o_agc[hmi_sub[HMI_S_AGC]], hmi_o_pre[hmi_sub[HMI_S_PRE]]);
-		lcd_writexy(0,1,s);	
-		lcd_curxy(4+(hmi_option>4?6:hmi_option), 0, true);
+		// lcd_writexy(0,1,s);	
+		// lcd_curxy(4+(hmi_option>4?6:hmi_option), 0, true);
 		break;
 	case HMI_S_MODE:
 		sprintf(s, "Set Mode: %s        ", hmi_o_mode[hmi_option]);
-		lcd_writexy(0,1,s);	
-		lcd_curxy(9, 1, false);
+		// lcd_writexy(0,1,s);	
+		// lcd_curxy(9, 1, false);
 		break;
 	case HMI_S_AGC:
 		sprintf(s, "Set AGC: %s        ", hmi_o_agc[hmi_option]);
-		lcd_writexy(0,1,s);	
-		lcd_curxy(8, 1, false);
+		// lcd_writexy(0,1,s);	
+		// lcd_curxy(8, 1, false);
 		break;
 	case HMI_S_PRE:
 		sprintf(s, "Set Pre: %s        ", hmi_o_pre[hmi_option]);
-		lcd_writexy(0,1,s);	
-		lcd_curxy(8, 1, false);
+		// lcd_writexy(0,1,s);	
+		// lcd_curxy(8, 1, false);
 		break;
 	case HMI_S_VOX:
 		sprintf(s, "Set VOX: %s        ", hmi_o_vox[hmi_option]);
-		lcd_writexy(0,1,s);	
-		lcd_curxy(8, 1, false);
+		// lcd_writexy(0,1,s);	
+		// lcd_curxy(8, 1, false);
 		break;
 	case HMI_S_BPF:
 		sprintf(s, "Band: %d %s        ", hmi_option, hmi_o_bpf[hmi_option]);
-		lcd_writexy(0,1,s);	
-		lcd_curxy(8, 1, false);
+		// lcd_writexy(0,1,s);	
+		// lcd_curxy(8, 1, false);
 	default:
 		break;
 	}
@@ -316,23 +308,8 @@ void hmi_evaluate(void)
 	
 	// See if VFO needs update
 	// si_evaluate(0, HMI_MULFREQ*(hmi_freq-FC_OFFSET));
-	// while(1)
-	{
-	adf4360_evaluate(hmi_freq);
-	}
 	
-	// Check bandfilter setting (thanks Alex)
-	// if      (hmi_freq < 2500000UL)	band = REL_LPF2;
-	// else if (hmi_freq < 6000000UL)	band = REL_BPF6;
-	// else if (hmi_freq < 12000000UL) band = REL_BPF12;
-	// else if (hmi_freq < 24000000UL) band = REL_BPF24;
-	// else 							band = REL_BPF40;
-	// if (band != hmi_bpf[hmi_sub[HMI_S_BPF]])								// Force update when changed
-	// {
-	// 	hmi_bpf[hmi_sub[HMI_S_BPF]] = band;
-	// 	hmi_update = true; 
-	// }
-	
+
 	// Update peripherals according to menu setting
 	// For frequency si5351 is set directly, HMI top line follows
 	if (hmi_update)
@@ -340,8 +317,6 @@ void hmi_evaluate(void)
 		dsp_setmode(hmi_sub[HMI_S_MODE]);
 		dsp_setvox(hmi_sub[HMI_S_VOX]);
 		dsp_setagc(hmi_sub[HMI_S_AGC]);	
-		// relay_setband(hmi_bpf[hmi_sub[HMI_S_BPF]]);
-		// relay_setattn(hmi_pre[hmi_sub[HMI_S_PRE]]);
 		hmi_update = false;
 	}
 }
@@ -371,7 +346,7 @@ void hmi_init(void)
 	gpio_pull_up(GP_AUX_2);
 	gpio_pull_up(GP_AUX_3);
 	gpio_pull_up(GP_PTT);
-	// gpio_set_oeover(GP_PTT, GPIO_OVERRIDE_HIGH);							// Enable output on PTT GPIO; bidirectional
+	gpio_set_oeover(GP_PTT, GPIO_OVERRIDE_HIGH);							// Enable output on PTT GPIO; bidirectional
 	
 	// Enable interrupt on level low
 	gpio_set_irq_enabled(GP_ENC_A, GPIO_IRQ_EDGE_ALL, true);
@@ -387,10 +362,10 @@ void hmi_init(void)
 	// Initialize LCD and set VFO
 	hmi_state = HMI_S_TUNE;
 	hmi_option = 4;															// Active kHz digit
-	hmi_freq = 777000UL;													// Initial frequency
+	hmi_freq = 7074000UL;													// Initial frequency
 
 	// si_setphase(0, 1);														// Set phase to 90deg (depends on mixer type)
-	// si_evaluate(0, HMI_MULFREQ*(hmi_freq-FC_OFFSET));						// Set freq to 2400.277 kHz
+	// si_evaluate(0, HMI_MULFREQ*(hmi_freq-FC_OFFSET));						// Set freq to 7074 kHz (depends on mixer type)
 	
 	ptt_state  = PTT_DEBOUNCE;
 	ptt_active = false;
@@ -398,8 +373,6 @@ void hmi_init(void)
 	dsp_setmode(hmi_sub[HMI_S_MODE]);
 	dsp_setvox(hmi_sub[HMI_S_VOX]);
 	dsp_setagc(hmi_sub[HMI_S_AGC]);	
-	// relay_setattn(hmi_pre[hmi_sub[HMI_S_PRE]]);
-	// relay_setband(hmi_bpf[hmi_sub[HMI_S_BPF]]);
 	hmi_update = false;
 }
 
