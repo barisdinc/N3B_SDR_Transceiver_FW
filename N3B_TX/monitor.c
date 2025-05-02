@@ -94,7 +94,7 @@ extern volatile int scale1;
 #endif
 void mon_or(void)
 {
-	printf("DSP overruns   : %d\n", dsp_overrun);
+	printf("DSP overruns   : %ld\n", dsp_overrun);
 #if DSP_FFT == 1
 	printf("DSP loop load  : %lu%%\n", (100*dsp_tickx)/512);	
 	printf("FFT scale = %d, iFFT scale = %d\n", scale0, scale1);	
@@ -110,8 +110,7 @@ extern volatile int adccnt;
 void mon_adc(void)
 {
 	// Print results
-	printf("RSSI: %5u\n", s_rssi);
-	printf("AGC : %5d\n", rx_agc);
+	printf("AGC : %5ld\n", rx_agc);
 	printf("ADCc: %5d\n", adccnt);
 }
 

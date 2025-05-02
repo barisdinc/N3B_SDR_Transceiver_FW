@@ -238,14 +238,11 @@ void hmi_callback(uint gpio, uint32_t events)
  */
 void hmi_evaluate(void)
 {
-	int band;
 	char s[32];
 	
 	// Print top line of display
 	if (tx_enabled)
 		sprintf(s, "%s %7.1f %c %-2d", hmi_o_mode[hmi_sub[HMI_S_MODE]], (double)hmi_freq/1000.0, 0x07, 0);
-	else
-		sprintf(s, "%s %7.1f %cS%-2d", hmi_o_mode[hmi_sub[HMI_S_MODE]], (double)hmi_freq/1000.0, 0x06, get_sval());
 
 	// lcd_writexy(0,0,s);
 	

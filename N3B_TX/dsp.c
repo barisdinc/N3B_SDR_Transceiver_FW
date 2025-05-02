@@ -63,47 +63,6 @@ void dsp_setmode(int mode)
 
 
 /*
- * S-Meter is based on RSSI, which is in fact the signal level in the preprocessor.
- * The length of the (I,Q) vector is taken as reference for RSSI, where
- * S value is highest bit set, i.e. RSSI of 512 corresponds with S-9 (S=log2(RSSI))
- * This value was calibrated roughly by using the sam antenna and 
- *   comparing an IC R71-E with my uSDR HW implementation and ADC_INT=8.
- * +20dB means 10x the S-9 RSSI level, or >5120
- * +40dB means 100x the S-9 RSSI level, or >51200
- */
-#define S940	51200
-#define S930	16180
-#define S920	5120
-#define S910	1618
-#define S9		512
-#define S8		256
-#define S7		128
-#define S6		64
-#define S5		32
-#define S4		16
-#define S3		8
-#define S2		4
-#define S1		2
-volatile uint32_t s_rssi;													// 1.. >51200
-int get_sval(void)
-{
-	uint32_t s_val = s_rssi;
-	if (s_val>S940) return(94);												// Return max 2 digits!
-	if (s_val>S930) return(93);
-	if (s_val>S920) return(92);
-	if (s_val>S910) return(91);
-	if (s_val>S9)   return(9);
-	if (s_val>S8)   return(8);
-	if (s_val>S7)   return(7);
-	if (s_val>S6)   return(6);
-	if (s_val>S5)   return(5);
-	if (s_val>S4)   return(4);
-	if (s_val>S3)   return(3);
-	if (s_val>S2)   return(2);
-	return(1);
-}
-
-/*
  * AGC reference level is log2(0x40) = 6, where 0x40 is the MSB of half DAC_RANGE
  * 1/AGC_DECAY and 1/AGC_ATTACK are multipliers before agc_gain value integrator
  * These values should ultimately be set by the HMI.
@@ -342,9 +301,6 @@ bool __not_in_flash_func(dsp_callback)(repeating_timer_t *t)
 			temp = (MAX(i,((29*i/32) + (61*q/128))))>>LSH;
 		else
 			temp = (MAX(q,((29*q/32) + (61*i/128))))>>LSH;
-		s_rssi = MAX(1,temp);
-		rx_agc = AGC_TOP/s_rssi;											// calculate scaling factor
-		if (rx_agc==0) rx_agc=1;
 	}
 		
 #if DSP_FFT == 1
@@ -501,12 +457,6 @@ void __not_in_flash_func(dsp_loop)()
 			gpio_put(GP_PTT, false); 										// Drive PTT low (active)  
 			tx();															// Do TX signal processing
 		}
-		else
-		{
-			gpio_put(GP_PTT, true);											// Drive PTT high (inactive)   
-			rx();															// Do RX signal processing
-		}
-		
 		/** !!! This is a trap, ptt remains active after once asserted: TO BE CHECKED! **/
 		tx_enabled = vox_active || ptt_active;								// Check RX or TX	
 		
