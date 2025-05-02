@@ -1,14 +1,5 @@
 #ifndef __MAIN_N3B_TX_H__
 #define __MAIN_N3B_TX_H__
-/* 
- * uSDR.h
- *
- * Created: Aug 2022
- * Author: Arjan te Marvelde
- *
- * This file contains the system-wide definitions and platform services.
- *
- */
 
 #include "hardware/i2c.h"
 

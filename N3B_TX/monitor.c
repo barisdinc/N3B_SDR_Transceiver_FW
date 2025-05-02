@@ -1,14 +1,3 @@
-/*
- * monitor.c
- *
- * Created: Mar 2021
- * Author: Arjan te Marvelde
- * 
- * Command shell on stdin/stdout.
- * Collects characters and parses commandstring.
- * Additional commands can easily be added.
- */ 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

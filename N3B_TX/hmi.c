@@ -1,9 +1,7 @@
 /*
  * hmi.c
  *
- * Created: Apr 2021
- * Author: Arjan te Marvelde
- * 
+ * Original Author: Arjan te Marvelde 2021
  * This file contains the HMI driver, processing user inputs.
  * It will also do the logic behind these, and write feedback to the LCD.
  *

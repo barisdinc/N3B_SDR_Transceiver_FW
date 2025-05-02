@@ -1,11 +1,10 @@
 /*
  * dsp.c
  *
- * Created: Mar 2021
- * Author: Arjan te Marvelde
- * 
+ * Baris Dinc (ATOLYE) 2025
+ *
+ * Origin Author: Arjan te Marvelde Mar 2021
  * Signal processing of RX and TX branch, to be run on the second processor core (CORE1).
- * 
  * The actual DSP engine can be either FFT based in the frequency domain, or in the time domain.
  * In dsp.h this can be selected compile-time, by defining the environment variable DSP_FFT.
  *
@@ -317,7 +316,7 @@ bool __not_in_flash_func(dsp_callback)(repeating_timer_t *t)
 	// Load new acquisition phase
 	// So restart ADCs and DMA
 	adccnt--;																// ADC overrun indicator decrement
-	adc_select_input(0);													// Start with ADC0
+	adc_select_input(2);													// Start with ADC0
 	while (!adc_fifo_is_empty()) adc_fifo_get();							// Empty leftovers from fifo, if any
 
 	dma_hw->ch[CH0].read_addr = (io_rw_32)&adc_hw->fifo;					// Read from ADC FIFO
@@ -432,12 +431,12 @@ void __not_in_flash_func(dsp_loop)()
 	 * samples are stored in array through IRQ callback
 	 */
 	adc_init();																// Initialize ADC to known state
-	adc_gpio_init(ADC_Q);													// ADC GPIO for Q channel
-	adc_gpio_init(ADC_I);													// ADC GPIO for I channel
+	// adc_gpio_init(ADC_Q);													// ADC GPIO for Q channel
+	// adc_gpio_init(ADC_I);													// ADC GPIO for I channel
 	adc_gpio_init(ADC_A);													// ADC GPIO for Audio channel
-	adc_set_round_robin(0x01+0x02+0x04);									// Sequence ADC 0-1-2 (GP 26, 27, 28) free running
-	adc_select_input(0);													// Start with ADC0
-	adc_fifo_setup(true,true,3,false,false);								// IRQ result, DMA req, fifo thr=3: xfer per 3 x 16 bits
+	// adc_set_round_robin(0x01+0x02+0x04);									// Sequence ADC 0-1-2 (GP 26, 27, 28) free running
+	adc_select_input(2);													// Start with ADC0
+	adc_fifo_setup(true,true,1,false,false);								// IRQ result, DMA req, fifo thr=3: xfer per 3 x 16 bits
 	adc_set_clkdiv(0);														// Fastest clock (500 kSps)
 
 	/*
@@ -450,7 +449,7 @@ void __not_in_flash_func(dsp_loop)()
 	
 	dma_hw->ch[CH0].read_addr = (io_rw_32)&adc_hw->fifo;					// Read from ADC FIFO
 	dma_hw->ch[CH0].write_addr = (io_rw_32)&adc_sample[0][0];				// Write to sample buffer
-	dma_hw->ch[CH0].transfer_count = ADC_INT * 3;							// Nr of 16 bit words to transfer
+	dma_hw->ch[CH0].transfer_count = ADC_INT * 1;							// Nr of 16 bit words to transfer
 	dma_hw->ch[CH0].ctrl_trig = DMA_CTRL0;									// Write ctrl word and start the DMA
 
 	adc_run(true);															// Also start the ADC

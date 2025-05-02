@@ -1,15 +1,10 @@
 /*
  * uSDR.c
  *
- * Created: Mar 2021
- * Author: Arjan te Marvelde
- * 
- * The main loop of the application.
+  * The main loop of the application.
  * This initializes the units that do the actual work, and then loops in the background. 
  * Other units are:
  * - dsp.c, containing all signal processing in RX and TX branches. This part runs on the second processor core.
- * - si5351.c, containing all controls for setting up the si5351 clock generator.
- * - lcd.c, contains all functions to put something on the LCD
  * - hmi.c, contains all functions that handle user inputs
  */
 

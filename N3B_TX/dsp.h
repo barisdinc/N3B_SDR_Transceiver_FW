@@ -1,20 +1,6 @@
 #ifndef __DSP_FFT_H__
 #define __DSP_FFT_H__
 /* 
- * dsp.h
- *
- * Created: Mar 2021
- * Author: Arjan te Marvelde
- *
- * See dsp.c for more information 
- *
- * HERE THE SELECTION BETWEEN TIME OR FREQUENCY DOMAIN PROCESSING IS MADE
- * DO THIS BY SETTING THE #define DSP_FFT TO 0 OR TO 1 RESPECTIVELY
- *
- */
-
-
-/* 
  * Callback timeout is TIM_US, value in usec
  * The carrier offset is !=0 only in FFT case.
  */

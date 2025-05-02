@@ -1,10 +1,8 @@
 /*
  * dsp_fft.c
- * ==>TO BE INCLUDED IN dsp.c
- *
- * Created: May 2022
- * Author: Arjan te Marvelde
+ * Author : Baris Dinc (ATOLYE) 2025
  * 
+ * Original Author: Arjan te Marvelde 2022
  * Signal processing of RX and TX branch, to be run on the second processor core (CORE1).
  * A branch has a dedicated routine that must run on set times.
  * In this case it runs when half FFT_SIZE of samples is ready to be processed.

@@ -1,10 +1,9 @@
 /*
  * dsp_tim.c
- * ==>TO BE INCLUDED IN dsp.c
  *
- * Created: May 2022
- * Author: Arjan te Marvelde
+ * Author : Baris Dinc (ATOLYE) 2025
  * 
+ * Original Author: Arjan te Marvelde 2022
  * Signal processing of RX and TX branch, to be run on the second processor core.
  * Each branch has a dedicated routine that must run on set times.
  * The period is determined by reads from the inter-core fifo, by the dsp_loop() routine. 
