@@ -8,6 +8,7 @@
 #include "main_n3b_tx.h"
 #include "dsp.h"
 #include "monitor.h"
+#include "adf4360.h"
 
 
 // Some special character ASCII codes
@@ -42,11 +43,11 @@ void mon_init()
 	mon_cmd[CMD_LEN] = '\0';						// Termination to be sure
 	printf("\n");
 	printf("=============\n");
-	printf(" uSDR-Pico   \n");
-	printf("  PE1ATM     \n");
-	printf(" 2021, Udjat \n");
+	printf("   N3B_TX    \n");
+	printf("   ATOLYE    \n");
+	printf(" 2025, Baris \n");
 	printf("=============\n");
-	printf("Pico> ");								// prompt
+	printf("N3B_TX> ");								// prompt
 }
 
 
@@ -110,22 +111,32 @@ extern volatile int adccnt;
 void mon_adc(void)
 {
 	// Print results
-	printf("AGC : %5ld\n", rx_agc);
 	printf("ADCc: %5d\n", adccnt);
 }
 
+void mon_adf(void)
+{
+	// Print results
+	// ADF4360_SetFrequency(2400277000);
+	if (nargs>1)
+		{
+			uint32_t adf_frq = atoi(argv[1]);
+			ADF4360_SetFrequency(adf_frq);
+		}
+}
 
 
 /*
  * Command shell table, organize the command functions above
  */
-#define NCMD	4
+#define NCMD	5
 shell_t shell[NCMD]=
 {
 	{"flash", 5, &mon_flash, "flash", "Reboots into USB bootloader mode"},
 	{"or",  2, &mon_or,  "or (no parameters)", "Returns overrun information"},
 	{"pt",  2, &mon_pt,  "pt (no parameters)", "Toggles PTT status"},
-	{"adc", 3, &mon_adc, "adc (no parameters)", "Dump latest ADC readouts"}
+	{"adc", 3, &mon_adc, "adc (no parameters)", "Dump latest ADC readouts"},
+	{"adf", 3, &mon_adf, "adf (frequency)", "Set frequency of PLL"}
 };
 
 
@@ -186,7 +197,7 @@ void mon_evaluate(void)
 		if (i>0)									// something to parse?
 			mon_parse(mon_cmd);						// --> process command
 		i=0;										// reset index
-		printf("Pico> ");							// prompt
+		printf("N3B_TX> ");							// prompt
 		break;
 	case LF:
 		break;										// Ignore, assume CR as terminator

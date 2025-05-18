@@ -1,7 +1,6 @@
 /*
- * uSDR.c
  *
-  * The main loop of the application.
+ * The main loop of the application.
  * This initializes the units that do the actual work, and then loops in the background. 
  * Other units are:
  * - dsp.c, containing all signal processing in RX and TX branches. This part runs on the second processor core.
@@ -21,6 +20,7 @@
 #include "hmi.h"
 #include "dsp.h"
 #include "monitor.h"
+#include "adf4360.h"
 
 
 
@@ -82,7 +82,8 @@ int main()
 	 */
 	//vreg_set_voltage(VREG_VOLTAGE_1_25); sleep_ms(10);
 	//set_sys_clock_khz(250000, false); sleep_ms(10);
-	
+	// sleep_ms(1000);
+	stdio_init_all();
 	/* 
 	 * Initialize LED pin output 
 	 */
@@ -90,6 +91,13 @@ int main()
 	gpio_set_dir(PICO_DEFAULT_LED_PIN, GPIO_OUT);
 	gpio_put(PICO_DEFAULT_LED_PIN, true);									// Set LED on
 	add_repeating_timer_ms(-LED_MS, led_callback, NULL, &led_timer);
+
+	/*
+	 * Initialize the PLL
+	*/
+	ADF4360_Init_new(ADF4360_0);
+	// ADF4360_SetFrequency(2400277000);
+	ADF4360_SetFrequency(2400277000);
 
 	/*
 	 * i2c0 is used for the si5351 interface
@@ -113,7 +121,7 @@ int main()
 	dsp_init();																// Signal processing unit
 	hmi_init();																// HMI user inputs
 	
-	/* A simple round-robin scheduler */
+	// /* A simple round-robin scheduler */
 	sem_init(&loop_sem, 1, 1) ;	
 	add_repeating_timer_ms(-LOOP_MS, loop_callback, NULL, &loop_timer);
 	while (1) 										

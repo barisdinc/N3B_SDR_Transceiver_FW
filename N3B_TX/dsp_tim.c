@@ -60,9 +60,8 @@ volatile int16_t a_s[15];													// Filtered and decimated samplesvolatile 
 bool __not_in_flash_func(tx)(void) 
 {
 	int32_t a_accu, q_accu;
-	int16_t qh;
+	int16_t qh = 0;
 	int i;
-	uint16_t i_dac, q_dac;
 		
 	/*** RAW Audio ***/
 	for (i=0; i<14; i++) 													//   and store in shift register
@@ -114,7 +113,7 @@ bool __not_in_flash_func(tx)(void)
 	 * Need to multiply AC with DAC_RANGE/ADC_RANGE (appr 1/8)
 	 * Any case: clip to range
 	 */
-	a_accu = DAC_BIAS - (qh/8);
+	a_accu = (DAC_BIAS - (qh/8));// >> 0;
 	if (a_accu<0)
 		q_sample = 0;
 	else if (a_accu>(DAC_RANGE-1))
@@ -122,7 +121,7 @@ bool __not_in_flash_func(tx)(void)
 	else
 		q_sample = a_accu;
 	
-	a_accu = DAC_BIAS + (a_s[7]/8);
+	a_accu = (DAC_BIAS + (a_s[7]/8));// >> 2;
 	if (a_accu<0)
 		i_sample = 0;
 	else if (a_accu>(DAC_RANGE-1))
